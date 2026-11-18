@@ -1,0 +1,1888 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Aalam 16эт — Aalam 16-кабат</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Шрифт Inter с поддержкой кириллицы -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        html, body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: #e2e8f0;
+            color: #0f172a;
+            overflow-x: hidden;
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(100%); opacity: 0.6; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .animate-sheet {
+            animation: slideUp 0.24s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes fadeSlideDown {
+            from { transform: translate(-50%, -16px); opacity: 0; }
+            to { transform: translate(-50%, 0); opacity: 1; }
+        }
+        .animate-toast {
+            animation: fadeSlideDown 0.22s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex justify-center bg-slate-200">
+
+    <!-- Мобильный контейнер приложения (до 480px на десктопе, 100% на смартфоне) -->
+    <div id="appRoot" class="w-full max-w-[480px] min-h-screen bg-slate-50 shadow-2xl relative flex flex-col">
+
+        <!-- Всплывающее уведомление (Toast) -->
+        <div id="toastBox" class="hidden fixed top-4 left-1/2 -translate-x-1/2 z-[100] w-[92%] max-w-[440px] px-4 py-3 rounded-2xl bg-slate-900 text-white text-sm font-semibold shadow-xl flex items-center gap-2.5 animate-toast">
+            <span id="toastIcon" class="text-base shrink-0">ℹ️</span>
+            <span id="toastText" class="leading-snug">Сообщение</span>
+        </div>
+
+        <!-- ВЕРХНЯЯ ШАПКА ПРИЛОЖЕНИЯ -->
+        <header class="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200/80 px-4 pt-3 pb-3">
+            <div class="flex items-center justify-between gap-2">
+                <!-- Логотип, название Aalam 16эт и статус облака -->
+                <div class="flex items-center gap-2.5 min-w-0">
+                    <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 text-white flex items-center justify-center shadow-sm shrink-0">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                        </svg>
+                    </div>
+                    <div class="min-w-0">
+                        <div class="flex items-center gap-1.5">
+                            <h1 id="headerAppTitle" class="text-base font-extrabold text-slate-900 tracking-tight truncate">Aalam 16эт</h1>
+                            <span id="syncStatusBadge" class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-slate-100 text-[10px] font-bold text-slate-600 shrink-0">
+                                <span id="syncStatusDot" class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                                <span id="syncStatusText">Синхр.</span>
+                            </span>
+                        </div>
+                        <p id="headerAppSubtitle" class="text-[11px] font-medium text-slate-500 truncate">3 подъезда • 16 этажей</p>
+                    </div>
+                </div>
+
+                <!-- Правые кнопки: Переключатель языка RU/KG и Доступ Домкома/Модератора -->
+                <div class="flex items-center gap-1.5 shrink-0">
+                    <button id="langToggleBtn" type="button" onclick="toggleLanguage()" class="h-11 px-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 active:scale-95 text-[11px] font-extrabold text-slate-800 border border-slate-200/80 flex items-center gap-1 transition-all" aria-label="Сменить язык">
+                        <span id="langBadgeRu" class="px-1.5 py-0.5 rounded-md bg-white text-blue-600 shadow-xs">RU</span>
+                        <span id="langBadgeKg" class="px-1.5 py-0.5 rounded-md text-slate-500">KG</span>
+                    </button>
+
+                    <button id="roleAccessBtn" type="button" onclick="openPinModal()" class="h-11 px-2.5 rounded-xl bg-slate-100 hover:bg-slate-200/80 active:scale-95 text-[11px] font-bold text-slate-700 border border-slate-200/80 flex items-center gap-1.5 max-w-[148px] transition-all">
+                        <span id="roleAccessIcon" class="shrink-0">👤</span>
+                        <span id="roleAccessLabel" class="truncate">Жилец / Исполн.</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Кнопка выбора подъезда (1, 2, 3) -->
+            <div class="mt-3">
+                <button id="entranceSelectorBtn" type="button" onclick="openEntranceSheet()" class="w-full min-h-[52px] px-3.5 py-2 rounded-2xl bg-slate-900 text-white flex items-center justify-between gap-2 shadow-sm active:scale-[0.99] transition-all">
+                    <div class="flex items-center gap-2.5 min-w-0">
+                        <span class="w-8 h-8 rounded-xl bg-white/15 flex items-center justify-center text-sm font-extrabold shrink-0" id="headerEntranceNum">1</span>
+                        <div class="text-left min-w-0">
+                            <div class="flex items-center gap-1.5">
+                                <span id="headerEntranceTitle" class="text-sm font-bold leading-tight truncate">Подъезд №1</span>
+                                <span id="headerEntranceManagedBadge" class="hidden px-1.5 py-0.5 rounded-md bg-emerald-500/25 text-emerald-300 text-[10px] font-extrabold">Ваш подъезд</span>
+                            </div>
+                            <div id="headerEntranceSummary" class="text-[11px] text-slate-300 truncate mt-0.5">В работе: 0 • Проверка: 0 • Принято: 0</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-1 shrink-0 bg-white/10 px-2.5 py-1.5 rounded-xl text-xs font-semibold">
+                        <span id="headerChangeBtnText">Выбрать</span>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </div>
+                </button>
+            </div>
+        </header>
+
+        <!-- БАННЕР АКТИВНОЙ РОЛИ ДОМКОМА ИЛИ МОДЕРАТОРА -->
+        <div id="roleActiveBanner" class="hidden bg-amber-50 border-b border-amber-200 px-4 py-2.5 flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2 min-w-0">
+                <span class="text-base shrink-0">🛡️</span>
+                <div class="min-w-0">
+                    <div id="roleBannerTitle" class="text-xs font-extrabold text-amber-950 truncate">Домком 1 подъезда</div>
+                    <div id="roleBannerSub" class="text-[11px] text-amber-800 truncate">Доступна 2-я галочка и удаление в вашем подъезде</div>
+                </div>
+            </div>
+            <button type="button" onclick="logoutRole()" id="roleLogoutBtn" class="h-9 px-3 rounded-xl bg-amber-200/80 hover:bg-amber-300 text-amber-950 text-xs font-bold shrink-0">
+                Выйти
+            </button>
+        </div>
+
+        <!-- ЭКРАН 1: ГЛАВНЫЙ СПИСОК ("ДОМ / ҮЙ" + 16 ЭТАЖЕЙ В ОДИН СТОЛБЕЦ) -->
+        <main id="mainListView" class="flex-1 px-4 pt-3.5 pb-28 flex flex-col gap-3">
+            <!-- Панель фильтров и порядка этажей -->
+            <div class="flex items-center justify-between gap-2">
+                <div class="flex items-center bg-slate-200/80 p-1 rounded-xl flex-1">
+                    <button type="button" id="filterModeAllBtn" onclick="setFloorFilterMode('all')" class="flex-1 h-9 px-2.5 rounded-lg text-xs font-bold bg-white text-slate-900 shadow-xs transition-all">
+                        Все 16 этажей
+                    </button>
+                    <button type="button" id="filterModeTasksBtn" onclick="setFloorFilterMode('with_tasks')" class="flex-1 h-9 px-2.5 rounded-lg text-xs font-bold text-slate-600 transition-all">
+                        Только с задачами
+                    </button>
+                </div>
+
+                <button type="button" id="sortOrderBtn" onclick="toggleFloorSortOrder()" class="h-11 px-3 rounded-xl bg-white border border-slate-200 text-xs font-extrabold text-slate-700 flex items-center gap-1 shadow-xs active:scale-95 shrink-0">
+                    <span id="sortOrderText">1 → 16</span>
+                </button>
+            </div>
+
+            <!-- Закреплённая сверху карточка "Дом / Үй" -->
+            <div id="pinnedHouseCardContainer"></div>
+
+            <!-- Вертикальный список всех 16 этажей -->
+            <div id="floorsColumnList" class="flex flex-col gap-2.5"></div>
+        </main>
+
+        <!-- ЭКРАН 2: СПИСОК ЗАДАНИЙ ЭТАЖА ИЛИ РАЗДЕЛА "ДОМ / ҮЙ" -->
+        <section id="taskListView" class="hidden flex-1 flex flex-col bg-slate-50 pb-28">
+            <div class="sticky top-[123px] z-20 bg-white border-b border-slate-200 px-4 py-3">
+                <div class="flex items-center justify-between gap-2">
+                    <button type="button" onclick="closeTaskListView()" class="h-11 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-800 text-xs font-bold flex items-center gap-1.5 shrink-0">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path>
+                        </svg>
+                        <span id="backBtnLabel">Назад</span>
+                    </button>
+
+                    <div class="text-center min-w-0 flex-1">
+                        <div id="taskViewSubtitle" class="text-[11px] font-bold uppercase tracking-wider text-blue-600 truncate">Подъезд №1</div>
+                        <h2 id="taskViewTitle" class="text-base font-extrabold text-slate-900 truncate">1-й этаж</h2>
+                    </div>
+
+                    <div class="w-16 shrink-0"></div>
+                </div>
+
+                <!-- Фильтр зон (только для раздела "Дом / Үй") -->
+                <div id="houseZonesBar" class="hidden mt-3 flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5"></div>
+            </div>
+
+            <!-- Карточки заданий -->
+            <div id="tasksCardsContainer" class="p-4 flex flex-col gap-3.5"></div>
+        </section>
+
+        <!-- ПЛАВАЮЩАЯ КНОПКА "+ ДОБАВИТЬ ЗАДАНИЕ" (ДОСТУПНА ВСЕМ БЕЗ ПАРОЛЯ) -->
+        <button type="button" id="fabAddTaskBtn" onclick="openAddTaskSheet()" class="fixed bottom-5 right-1/2 translate-x-[220px] max-[480px]:right-4 max-[480px]:translate-x-0 z-30 h-14 px-5 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-sm shadow-xl shadow-blue-600/30 flex items-center gap-2 active:scale-95 transition-all">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.6" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path>
+            </svg>
+            <span id="fabAddTaskText">Добавить задание</span>
+        </button>
+
+        <!-- МОДАЛЬНОЕ ОКНО: ВЫБОР ПОДЪЕЗДА (1, 2, 3) -->
+        <div id="entranceSheetBackdrop" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-end justify-center" onclick="if(event.target===this) closeEntranceSheet()">
+            <div class="w-full max-w-[480px] bg-white rounded-t-3xl p-5 pb-8 shadow-2xl animate-sheet">
+                <div class="w-10 h-1.5 bg-slate-200 rounded-full mx-auto mb-4"></div>
+                <div class="flex items-center justify-between mb-3">
+                    <div>
+                        <h3 id="entranceSheetTitle" class="text-lg font-extrabold text-slate-900">Выберите подъезд</h3>
+                        <p id="entranceSheetSub" class="text-xs text-slate-500">Сводка задач по 16 этажам</p>
+                    </div>
+                    <button type="button" onclick="closeEntranceSheet()" class="w-10 h-10 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-bold">✕</button>
+                </div>
+                <div id="entranceOptionsList" class="flex flex-col gap-2.5 mt-2"></div>
+            </div>
+        </div>
+
+        <!-- МОДАЛЬНОЕ ОКНО: ВХОД ДОМКОМА (1/2/3 ПОДЪЕЗДА) ИЛИ МОДЕРАТОРА -->
+        <div id="pinModalBackdrop" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4" onclick="if(event.target===this) closePinModal()">
+            <div class="w-full max-w-[480px] bg-white rounded-t-3xl sm:rounded-3xl p-5 pb-8 shadow-2xl animate-sheet">
+                <div class="w-10 h-1.5 bg-slate-200 rounded-full mx-auto mb-4 sm:hidden"></div>
+                <div class="flex items-center justify-between">
+                    <h3 id="pinModalTitle" class="text-lg font-extrabold text-slate-900">Доступ Домкома / Модератора</h3>
+                    <button type="button" onclick="closePinModal()" class="w-10 h-10 rounded-full bg-slate-100 text-slate-600 font-bold flex items-center justify-center">✕</button>
+                </div>
+                <p id="pinModalDesc" class="text-xs text-slate-500 mt-1">Введите персональный PIN-код для подтверждения работ (2-я галочка) и удаления задач</p>
+
+                <!-- Блок активной роли, если уже выполнен вход -->
+                <div id="pinCurrentRoleBox" class="hidden mt-3 p-3 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-between gap-2">
+                    <div class="text-xs font-extrabold text-amber-950" id="pinCurrentRoleText"></div>
+                    <button type="button" onclick="logoutRole(); closePinModal();" id="pinModalLogoutBtn" class="h-9 px-3 rounded-xl bg-amber-200 text-amber-950 text-xs font-bold shrink-0">Выйти</button>
+                </div>
+
+                <form onsubmit="submitPinCode(event)" class="mt-4">
+                    <input id="pinInputField" type="password" inputmode="numeric" maxlength="6" placeholder="••••" class="w-full h-14 px-4 rounded-2xl bg-slate-100 border-2 border-slate-200 focus:border-blue-600 focus:bg-white text-center text-2xl font-extrabold tracking-[0.4em] outline-none">
+                    <p id="pinErrorText" class="hidden text-xs font-bold text-rose-600 text-center mt-2">Неверный PIN-код</p>
+
+                    <!-- Подсказка с PIN-кодами для быстрого тестирования всех 4 ролей -->
+                    <div class="mt-3 p-3 rounded-2xl bg-slate-50 border border-slate-200/80 text-[11px] text-slate-600 space-y-1">
+                        <div id="pinHintsHeader" class="font-bold text-slate-800 mb-1">Тестовые PIN-коды доступа:</div>
+                        <div class="grid grid-cols-2 gap-1.5">
+                            <button type="button" onclick="quickFillPin('1111')" class="text-left px-2 py-1.5 rounded-lg bg-white border border-slate-200 hover:border-blue-400 font-semibold">
+                                🔑 <span id="hintDomkom1">Подъезд №1</span>: <strong>1111</strong>
+                            </button>
+                            <button type="button" onclick="quickFillPin('2222')" class="text-left px-2 py-1.5 rounded-lg bg-white border border-slate-200 hover:border-blue-400 font-semibold">
+                                🔑 <span id="hintDomkom2">Подъезд №2</span>: <strong>2222</strong>
+                            </button>
+                            <button type="button" onclick="quickFillPin('3333')" class="text-left px-2 py-1.5 rounded-lg bg-white border border-slate-200 hover:border-blue-400 font-semibold">
+                                🔑 <span id="hintDomkom3">Подъезд №3</span>: <strong>3333</strong>
+                            </button>
+                            <button type="button" onclick="quickFillPin('0000')" class="text-left px-2 py-1.5 rounded-lg bg-indigo-50 border border-indigo-200 hover:border-indigo-400 text-indigo-900 font-bold">
+                                🛡️ <span id="hintModerator">Модератор</span>: <strong>0000</strong>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2.5 mt-4">
+                        <button type="button" id="pinCancelBtn" onclick="closePinModal()" class="h-12 rounded-2xl bg-slate-100 text-slate-700 font-bold text-sm">Отмена</button>
+                        <button type="submit" id="pinSubmitBtn" class="h-12 rounded-2xl bg-blue-600 text-white font-bold text-sm shadow-md shadow-blue-600/20">Войти</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- МОДАЛЬНОЕ ОКНО: ДОБАВЛЕНИЕ ЗАДАЧИ (ОТКРЫТО ДЛЯ ВСЕХ) -->
+        <div id="addTaskBackdrop" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-end justify-center" onclick="if(event.target===this) closeAddTaskSheet()">
+            <div class="w-full max-w-[480px] max-h-[92vh] bg-white rounded-t-3xl flex flex-col shadow-2xl animate-sheet">
+                <div class="p-5 pb-3 border-b border-slate-100 shrink-0">
+                    <div class="w-10 h-1.5 bg-slate-200 rounded-full mx-auto mb-3"></div>
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 id="addSheetTitle" class="text-lg font-extrabold text-slate-900">Новое задание</h3>
+                            <p id="addSheetSub" class="text-[11px] text-slate-500">Создать задачу может любой жилец или исполнитель</p>
+                        </div>
+                        <button type="button" onclick="closeAddTaskSheet()" class="w-10 h-10 rounded-full bg-slate-100 text-slate-600 font-bold flex items-center justify-center">✕</button>
+                    </div>
+                </div>
+
+                <form onsubmit="submitNewTask(event)" class="p-5 overflow-y-auto flex-1 flex flex-col gap-3.5 pb-8">
+                    <!-- Выбор типа места: Дом или Подъезд -->
+                    <div>
+                        <label id="formLocationTypeLabel" class="block text-xs font-bold text-slate-700 mb-1.5">Где проблема / задача?</label>
+                        <select id="formLocationSelect" onchange="onFormLocationChange()" class="w-full h-12 px-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-sm font-bold text-slate-800 outline-none focus:border-blue-600">
+                        </select>
+                    </div>
+
+                    <!-- Подъезд и Этаж -->
+                    <div id="formEntranceFloorRow" class="grid grid-cols-2 gap-2.5">
+                        <div>
+                            <label id="formEntranceLabel" class="block text-xs font-bold text-slate-700 mb-1.5">Подъезд</label>
+                            <select id="formEntranceSelect" class="w-full h-12 px-3 rounded-2xl bg-slate-50 border border-slate-200 text-sm font-bold text-slate-800 outline-none focus:border-blue-600">
+                            </select>
+                        </div>
+                        <div>
+                            <label id="formFloorLabel" class="block text-xs font-bold text-slate-700 mb-1.5">Этаж</label>
+                            <select id="formFloorSelect" class="w-full h-12 px-3 rounded-2xl bg-slate-50 border border-slate-200 text-sm font-bold text-slate-800 outline-none focus:border-blue-600">
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Зона по дому -->
+                    <div id="formHouseZoneRow" class="hidden bg-indigo-50/70 border border-indigo-200 rounded-2xl p-3">
+                        <label id="formZoneLabel" class="block text-xs font-bold text-indigo-950 mb-1.5">Общедомовая зона</label>
+                        <select id="formZoneSelect" class="w-full h-11 px-3 rounded-xl bg-white border border-indigo-200 text-sm font-bold text-slate-800 outline-none focus:border-indigo-600">
+                        </select>
+                    </div>
+
+                    <!-- Название задачи -->
+                    <div>
+                        <label id="formTitleLabel" class="block text-xs font-bold text-slate-700 mb-1.5">Что нужно сделать?</label>
+                        <input id="formTitleInput" type="text" required maxlength="80" placeholder="Например: Почистить кафель у лифта" class="w-full h-12 px-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-sm font-semibold text-slate-900 outline-none focus:border-blue-600">
+                    </div>
+
+                    <!-- Комментарий -->
+                    <div>
+                        <label id="formDescLabel" class="block text-xs font-bold text-slate-700 mb-1.5">Комментарий (необязательно)</label>
+                        <textarea id="formDescInput" rows="2" maxlength="220" placeholder="Уточните детали..." class="w-full p-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-sm text-slate-800 outline-none focus:border-blue-600 resize-none"></textarea>
+                    </div>
+
+                    <!-- Фотография -->
+                    <div>
+                        <div class="flex items-center justify-between mb-1.5">
+                            <label id="formPhotoLabel" class="text-xs font-bold text-slate-700">Фотография</label>
+                            <button type="button" id="formPresetPhotoBtn" onclick="applyPresetDemoPhoto()" class="text-xs font-bold text-blue-600 hover:underline">
+                                ✨ Демо-фото
+                            </button>
+                        </div>
+
+                        <label class="w-full min-h-[56px] px-4 py-3 rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 hover:bg-slate-100 flex items-center justify-center gap-2 cursor-pointer transition-all">
+                            <span class="text-lg">📷</span>
+                            <span id="formPhotoUploadText" class="text-xs font-bold text-slate-700">Снять на камеру или выбрать из галереи</span>
+                            <input id="formPhotoFileInput" type="file" accept="image/*" class="hidden" onchange="handlePhotoFileUpload(event)">
+                        </label>
+
+                        <div id="formPhotoPreviewBox" class="hidden relative mt-2.5 rounded-2xl overflow-hidden border border-slate-200 h-36 bg-slate-100">
+                            <img id="formPhotoPreviewImg" src="" alt="Preview" class="w-full h-full object-cover">
+                            <button type="button" onclick="clearFormPhoto()" class="absolute top-2 right-2 w-8 h-8 rounded-full bg-slate-900/75 text-white text-xs font-bold flex items-center justify-center">✕</button>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="formSubmitTaskBtn" class="w-full h-13 py-3.5 mt-1 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-sm shadow-lg shadow-blue-600/25 active:scale-[0.99] transition-all">
+                        Опубликовать задание
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- ДИАЛОГ ПОДТВЕРЖДЕНИЯ УДАЛЕНИЯ -->
+        <div id="confirmDialogBackdrop" class="hidden fixed inset-0 z-[60] bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4" onclick="if(event.target===this) closeConfirmDialog()">
+            <div class="w-full max-w-[380px] bg-white rounded-3xl p-5 shadow-2xl">
+                <h3 id="confirmDialogTitle" class="text-base font-extrabold text-slate-900">Подтверждение</h3>
+                <p id="confirmDialogText" class="text-xs text-slate-600 mt-1.5 leading-relaxed">Вы уверены?</p>
+                <div class="grid grid-cols-2 gap-2.5 mt-5">
+                    <button type="button" id="confirmDialogCancelBtn" onclick="closeConfirmDialog()" class="h-11 rounded-xl bg-slate-100 text-slate-700 text-xs font-bold">Отмена</button>
+                    <button type="button" id="confirmDialogOkBtn" class="h-11 rounded-xl bg-rose-600 text-white text-xs font-bold">Удалить</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ПОЛНОЭКРАННЫЙ ПРОСМОТР ФОТО (LIGHTBOX) -->
+        <div id="lightboxBackdrop" class="hidden fixed inset-0 z-[70] bg-black/95 flex flex-col justify-between p-4" onclick="if(event.target===this) closeLightbox()">
+            <div class="flex justify-end">
+                <button type="button" onclick="closeLightbox()" class="w-11 h-11 rounded-full bg-white/15 text-white text-lg font-bold flex items-center justify-center">✕</button>
+            </div>
+            <div class="flex-1 flex items-center justify-center overflow-hidden my-2">
+                <img id="lightboxImage" src="" alt="Full view" class="max-w-full max-h-[75vh] rounded-2xl object-contain">
+            </div>
+            <p id="lightboxCaption" class="text-center text-xs font-semibold text-white/90 pb-4 px-2"></p>
+        </div>
+
+    </div>
+
+    <!-- FIREBASE CLOUD SYNC + ЛОГИКА ПРИЛОЖЕНИЯ -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, setDoc, updateDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // ==================== КОНСТАНТЫ, РОЛИ И СЛОВАРЬ (RU / KG) ====================
+        const STORAGE_TASKS_KEY = 'aalam_16et_tasks_v1';
+        const STORAGE_LANG_KEY = 'aalam_16et_lang_v1';
+        const STORAGE_ROLE_KEY = 'aalam_16et_role_v1';
+
+        const ENTRANCES_COUNT = 3;
+        const FLOORS_COUNT = 16;
+
+        // Роли доступа по PIN-коду
+        // role: 'guest' | 'domkom_1' | 'domkom_2' | 'domkom_3' | 'moderator'
+        const PIN_ROLES = {
+            '1111': 'domkom_1',
+            '2222': 'domkom_2',
+            '3333': 'domkom_3',
+            '0000': 'moderator'
+        };
+
+        const ZONES = [
+            { id: 'yard', icon: '🌳', ru: 'Двор', kg: 'Короо' },
+            { id: 'roof', icon: '🏠', ru: 'Крыша', kg: 'Чатыр' },
+            { id: 'parking', icon: '🚗', ru: 'Паркинг', kg: 'Паркинг' },
+            { id: 'general', icon: '🏢', ru: 'Общее', kg: 'Жалпы' }
+        ];
+
+        const DICT = {
+            ru: {
+                appTitle: 'Aalam 16эт',
+                appSubtitle: '3 подъезда • 16 этажей',
+                syncOnline: 'Онлайн',
+                syncLocal: 'Локально',
+                syncConnecting: 'Синхр.',
+                roleGuestShort: 'Жилец / Исполн.',
+                roleGuestFull: 'Жилец / Исполнитель',
+                roleDomkom1: 'Домком 1 подъезда',
+                roleDomkom2: 'Домком 2 подъезда',
+                roleDomkom3: 'Домком 3 подъезда',
+                roleModerator: 'Модератор',
+                roleBannerSubDomkom: (n) => `Приёмка (2-я галочка) и удаление в Подъезде №${n} и «Дом»`,
+                roleBannerSubMod: 'Полный доступ: приёмка и удаление по всем 3 подъездам и «Дом»',
+                yourEntranceBadge: 'Ваш подъезд',
+                entranceName: (n) => `Подъезд №${n}`,
+                entranceSummary: (a, r, v) => `В работе: ${a} • Проверка: ${r} • Принято: ${v}`,
+                changeBtn: 'Выбрать',
+                logoutBtn: 'Выйти',
+                filterAllFloors: 'Все 16 этажей',
+                filterWithTasks: 'Только с задачами',
+                houseTitle: 'Дом',
+                houseSub: 'Двор, крыша, паркинг, общие зоны',
+                wholeHouseTag: 'Общий дом',
+                floorTitle: (n) => `${n}-й этаж`,
+                floorShort: (n) => `${n} этаж`,
+                noTasksText: 'Заданий нет',
+                badgeActive: (n) => `${n} в работе`,
+                badgeReview: (n) => `${n} на проверке`,
+                badgeApproved: (n) => `${n} принято ✓✓`,
+                backBtn: 'Назад',
+                fabAddTask: 'Добавить задание',
+                zoneAll: 'Все',
+                emptyTasksTitle: 'Заданий пока нет',
+                emptyTasksSub: 'Нажмите «+ Добавить задание» внизу, если нужно сообщить о проблеме или уборке.',
+                statusActive: 'В работе',
+                statusReview: '✓ На проверке',
+                statusApproved: '✓✓ Принято домкомом',
+                tapToZoom: '🔍 Увеличить фото',
+                authorLabel: 'Добавил:',
+                workerDoneBtn: 'Выполнено (1-я галочка)',
+                workerUndoBtn: 'Выполнено ✓ (нажмите для отмены)',
+                domkomApproveBtn: 'Принято домкомом (2-я галочка)',
+                domkomApprovedLabel: 'Принято домкомом ✓✓',
+                lockHintEntrance: (n) => `2-я галочка доступна Домкому ${n}-го подъезда или Модератору`,
+                lockHintHouse: '2-я галочка доступна Домкому любого подъезда или Модератору',
+                reworkBtn: 'На доработку',
+                deleteBtn: 'Удалить',
+                entranceSheetTitle: 'Выберите подъезд',
+                entranceSheetSub: 'Сводка задач по 16 этажам',
+                selectedTag: 'Выбран',
+                pinTitle: 'Доступ Домкома / Модератора',
+                pinDesc: 'Введите персональный PIN-код для приёмки работ (2-я галочка) и удаления задач',
+                pinHintsHeader: 'PIN-коды доступа по подъездам:',
+                pinError: 'Неверный PIN-код',
+                cancelBtn: 'Отмена',
+                loginBtn: 'Войти',
+                addSheetTitle: 'Новое задание',
+                addSheetSub: 'Создать задачу может любой жилец или исполнитель',
+                locTypeLabel: 'Где проблема / задача?',
+                locHouseOption: 'Дом (двор, крыша, паркинг, общие зоны)',
+                locEntranceOption: 'Подъезд и этаж (1–16)',
+                entranceLabel: 'Подъезд',
+                floorLabel: 'Этаж',
+                zoneLabel: 'Общедомовая зона',
+                taskTitleLabel: 'Что нужно сделать?',
+                taskTitlePlaceholder: 'Например: Почистить кафель у лифта',
+                taskDescLabel: 'Комментарий (необязательно)',
+                taskDescPlaceholder: 'Уточните детали для исполнителя...',
+                photoLabel: 'Фотография',
+                presetPhotoBtn: '✨ Демо-фото',
+                photoUploadText: 'Снять на камеру или выбрать из галереи',
+                publishBtn: 'Опубликовать задание',
+                confirmDeleteTitle: 'Удалить задание?',
+                confirmDeleteText: 'Карточка задания и фотография будут удалены для всех жильцов.',
+                confirmOkBtn: 'Удалить',
+                toastWorkerDone: 'Отмечено выполненным! Ожидает проверки домкома ✓',
+                toastWorkerUndone: 'Отметка выполнения снята',
+                toastApproved: 'Работа принята! Поставлена 2-я галочка ✓✓',
+                toastRework: 'Задание возвращено в работу',
+                toastRoleLogin: (roleName) => `Вы вошли как: ${roleName} 🛡️`,
+                toastRoleLogout: 'Вы вышли в режим Жильца / Исполнителя',
+                toastTaskAdded: 'Задание опубликовано и видно всем!',
+                toastTaskDeleted: 'Задание удалено'
+            },
+            kg: {
+                appTitle: 'Aalam 16-кабат',
+                appSubtitle: '3 подъезд • 16 кабат',
+                syncOnline: 'Онлайн',
+                syncLocal: 'Локалдык',
+                syncConnecting: 'Байланыш',
+                roleGuestShort: 'Тургун / Аткар.',
+                roleGuestFull: 'Тургун / Аткаруучу',
+                roleDomkom1: '1-подъезддин үй башчысы',
+                roleDomkom2: '2-подъезддин үй башчысы',
+                roleDomkom3: '3-подъезддин үй башчысы',
+                roleModerator: 'Модератор',
+                roleBannerSubDomkom: (n) => `${n}-подъездде жана «Үй» бөлүмүндө 2-белги коюу жана өчүрүү жеткиликтүү`,
+                roleBannerSubMod: 'Толук укук: бардык 3 подъезд жана «Үй» боюнча кабыл алуу жана өчүрүү',
+                yourEntranceBadge: 'Сиздин подъезд',
+                entranceName: (n) => `${n}-подъезд`,
+                entranceSummary: (a, r, v) => `Аткарылууда: ${a} • Текшерүү: ${r} • Кабыл алынды: ${v}`,
+                changeBtn: 'Тандоо',
+                logoutBtn: 'Чыгуу',
+                filterAllFloors: 'Бардык 16 кабат',
+                filterWithTasks: 'Тапшырмалар бар',
+                houseTitle: 'Үй',
+                houseSub: 'Короо, чатыр, паркинг, жалпы жайлар',
+                wholeHouseTag: 'Жалпы үй',
+                floorTitle: (n) => `${n}-кабат`,
+                floorShort: (n) => `${n}-кабат`,
+                noTasksText: 'Тапшырмалар жок',
+                badgeActive: (n) => `${n} аткарылууда`,
+                badgeReview: (n) => `${n} текшерүүдө`,
+                badgeApproved: (n) => `${n} кабыл алынды ✓✓`,
+                backBtn: 'Артка',
+                fabAddTask: 'Тапшырма кошуу',
+                zoneAll: 'Баары',
+                emptyTasksTitle: 'Азырынча тапшырмалар жок',
+                emptyTasksSub: 'Маселе же тазалоо тууралуу билдирүү үчүн ылдыйдагы «+ Тапшырма кошуу» баскычын басыңыз.',
+                statusActive: 'Аткарылууда',
+                statusReview: '✓ Текшерүүдө',
+                statusApproved: '✓✓ Үй башчы кабыл алды',
+                tapToZoom: '🔍 Сүрөттү чоңойтуу',
+                authorLabel: 'Кошту:',
+                workerDoneBtn: 'Аткарылды (1-белги)',
+                workerUndoBtn: 'Аткарылды ✓ (жокко чыгаруу үчүн басыңыз)',
+                domkomApproveBtn: 'Үй башчы кабыл алды (2-белги)',
+                domkomApprovedLabel: 'Үй башчы кабыл алды ✓✓',
+                lockHintEntrance: (n) => `2-белгини ${n}-подъезддин үй башчысы же Модератор гана коё алат`,
+                lockHintHouse: '2-белгини каалаган подъезддин үй башчысы же Модератор коё алат',
+                reworkBtn: 'Кайра иштетүү',
+                deleteBtn: 'Өчүрүү',
+                entranceSheetTitle: 'Подъездди тандаңыз',
+                entranceSheetSub: '16 кабат боюнча тапшырмалардын жыйынтыгы',
+                selectedTag: 'Тандалды',
+                pinTitle: 'Үй башчы / Модератор кирүүсү',
+                pinDesc: 'Иштерди кабыл алуу (2-белги) жана тапшырмаларды өчүрүү үчүн жеке PIN-кодду жазыңыз',
+                pinHintsHeader: 'Подъезддер боюнча кирүү PIN-коддору:',
+                pinError: 'PIN-код туура эмес',
+                cancelBtn: 'Жокко чыгаруу',
+                loginBtn: 'Кирүү',
+                addSheetTitle: 'Жаңы тапшырма',
+                addSheetSub: 'Ар бир тургун же аткаруучу тапшырма кошо алат',
+                locTypeLabel: 'Маселе / тапшырма кайсы жерде?',
+                locHouseOption: 'Үй (короо, чатыр, паркинг, жалпы жайлар)',
+                locEntranceOption: 'Подъезд жана кабат (1–16)',
+                entranceLabel: 'Подъезд',
+                floorLabel: 'Кабат',
+                zoneLabel: 'Үй боюнча аймак',
+                taskTitleLabel: 'Эмне кылуу керек?',
+                taskTitlePlaceholder: 'Мисалы: Лифттин жанындагы кафелди тазалоо',
+                taskDescLabel: 'Комментарий (милдеттүү эмес)',
+                taskDescPlaceholder: 'Аткаруучу үчүн кошумча маалымат...',
+                photoLabel: 'Сүрөт',
+                presetPhotoBtn: '✨ Демо-сүрөт',
+                photoUploadText: 'Камерага тартуу же галереядан тандоо',
+                publishBtn: 'Тапшырманы жарыялоо',
+                confirmDeleteTitle: 'Тапшырманы өчүрөсүзбү?',
+                confirmDeleteText: 'Тапшырма жана сүрөт бардык тургундар үчүн өчүрүлөт.',
+                confirmOkBtn: 'Өчүрүү',
+                toastWorkerDone: 'Аткарылды деп белгиленди! Үй башчынын текшерүүсүн күтүүдө ✓',
+                toastWorkerUndone: 'Аткарылды деген белги алынды',
+                toastApproved: 'Иш кабыл алынды! 2-белги коюлду ✓✓',
+                toastRework: 'Тапшырма кайра ишке жөнөтүлдү',
+                toastRoleLogin: (roleName) => `Сиз кирдиңиз: ${roleName} 🛡️`,
+                toastRoleLogout: 'Сиз Тургун / Аткаруучу режимине өттүңүз',
+                toastTaskAdded: 'Тапшырма жарыяланды жана баарына көрүнөт!',
+                toastTaskDeleted: 'Тапшырма өчүрүлдү'
+            }
+        };
+
+        // ==================== ВСТРОЕННЫЕ ДЕМО-ИЛЛЮСТРАЦИИ (SVG DATA URI) ====================
+        function getDemoSvgDataUri(type) {
+            const templates = {
+                tile: `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="360" viewBox="0 0 600 360">
+                    <rect width="600" height="360" fill="#e2e8f0"/>
+                    <g stroke="#94a3b8" stroke-width="2">
+                        <line x1="0" y1="90" x2="600" y2="90"/><line x1="0" y1="180" x2="600" y2="180"/><line x1="0" y1="270" x2="600" y2="270"/>
+                        <line x1="150" y1="0" x2="150" y2="360"/><line x1="300" y1="0" x2="300" y2="360"/><line x1="450" y1="0" x2="450" y2="360"/>
+                    </g>
+                    <ellipse cx="290" cy="210" rx="85" ry="42" fill="#64748b" opacity="0.45"/>
+                    <circle cx="290" cy="210" r="95" fill="none" stroke="#ef4444" stroke-width="5" stroke-dasharray="12 8"/>
+                </svg>`,
+                window: `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="360" viewBox="0 0 600 360">
+                    <rect width="600" height="360" fill="#dbeafe"/>
+                    <rect x="130" y="30" width="340" height="300" rx="14" fill="#ffffff" stroke="#64748b" stroke-width="8"/>
+                    <rect x="155" y="55" width="290" height="250" fill="#bae6fd"/>
+                    <rect x="445" y="155" width="18" height="50" rx="6" fill="#334155"/>
+                    <rect x="445" y="175" width="46" height="12" rx="6" fill="#ef4444" transform="rotate(24 445 175)"/>
+                    <circle cx="465" cy="182" r="36" fill="none" stroke="#ef4444" stroke-width="4"/>
+                </svg>`,
+                parking: `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="360" viewBox="0 0 600 360">
+                    <rect width="600" height="360" fill="#1e293b"/>
+                    <rect x="0" y="240" width="600" height="120" fill="#334155"/>
+                    <rect x="70" y="50" width="460" height="165" rx="12" fill="#0f172a" stroke="#475569" stroke-width="4"/>
+                    <rect x="200" y="285" width="200" height="30" rx="4" fill="#64748b"/>
+                    <circle cx="300" cy="300" r="38" fill="none" stroke="#f59e0b" stroke-width="4"/>
+                </svg>`,
+                roof: `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="360" viewBox="0 0 600 360">
+                    <rect width="600" height="360" fill="#bae6fd"/>
+                    <rect x="0" y="200" width="600" height="160" fill="#64748b"/>
+                    <rect x="180" y="135" width="240" height="100" rx="8" fill="#475569" stroke="#1e293b" stroke-width="4"/>
+                    <circle cx="380" cy="145" r="24" fill="none" stroke="#ef4444" stroke-width="4"/>
+                </svg>`,
+                yard: `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="360" viewBox="0 0 600 360">
+                    <rect width="600" height="360" fill="#dcfce7"/>
+                    <rect x="0" y="245" width="600" height="115" fill="#cbd5e1"/>
+                    <g stroke="#475569" stroke-width="6">
+                        <line x1="180" y1="70" x2="180" y2="255"/><line x1="420" y1="70" x2="420" y2="255"/>
+                        <line x1="180" y1="90" x2="420" y2="90"/><line x1="180" y1="230" x2="420" y2="230"/>
+                    </g>
+                    <circle cx="415" cy="160" r="26" fill="none" stroke="#ef4444" stroke-width="4"/>
+                </svg>`,
+                lamp: `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="360" viewBox="0 0 600 360">
+                    <rect width="600" height="360" fill="#fef3c7"/>
+                    <rect x="220" y="70" width="160" height="160" rx="80" fill="#fde68a" stroke="#d97706" stroke-width="6"/>
+                    <circle cx="300" cy="150" r="95" fill="none" stroke="#ef4444" stroke-width="4" stroke-dasharray="10 6"/>
+                </svg>`
+            };
+            return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(templates[type] || templates.tile);
+        }
+
+        // ==================== НАЧАЛЬНЫЕ ДЕМО-ЗАДАЧИ ====================
+        function getInitialDemoTasks() {
+            return [
+                {
+                    id: 'seed_house_1',
+                    isHouse: true,
+                    zone: 'parking',
+                    entrance: 0,
+                    floor: 0,
+                    title_ru: 'Очистить ливнёвку в подземном паркинге',
+                    title_kg: 'Жер астындагы паркингдеги суу агуучу түтүктү тазалоо',
+                    desc_ru: 'Убрать песок с решётки на въезде в паркинг.',
+                    desc_kg: 'Паркингге кирүүчү жердеги торчодон кумду тазалоо.',
+                    photoType: 'parking',
+                    customPhoto: null,
+                    authorRole: 'domkom_1',
+                    status: 'active',
+                    createdAt: '09:10',
+                    createdTs: 1700000006
+                },
+                {
+                    id: 'seed_house_2',
+                    isHouse: true,
+                    zone: 'roof',
+                    entrance: 0,
+                    floor: 0,
+                    title_ru: 'Проверить замок люка на крышу',
+                    title_kg: 'Чатырга чыгуучу люктун кулпусун текшерүү',
+                    desc_ru: 'Люк должен быть плотно закрыт после проверки антенн.',
+                    desc_kg: 'Антенналарды текшергенден кийин люк бекем жабылышы керек.',
+                    photoType: 'roof',
+                    customPhoto: null,
+                    authorRole: 'moderator',
+                    status: 'review',
+                    createdAt: '10:05',
+                    createdTs: 1700000005
+                },
+                {
+                    id: 'seed_house_3',
+                    isHouse: true,
+                    zone: 'yard',
+                    entrance: 0,
+                    floor: 0,
+                    title_ru: 'Отрегулировать доводчик калитки во дворе',
+                    title_kg: 'Короодогу дарбазанын жапкычын жөндөө',
+                    desc_ru: 'Калитка со стороны детской площадки громко хлопает.',
+                    desc_kg: 'Балдар аянтчасы тараптагы дарбаза катуу жабылып жатат.',
+                    photoType: 'yard',
+                    customPhoto: null,
+                    authorRole: 'guest',
+                    status: 'approved',
+                    createdAt: 'Вчера',
+                    createdTs: 1700000004
+                },
+                {
+                    id: 'seed_e1_f1',
+                    isHouse: false,
+                    zone: null,
+                    entrance: 1,
+                    floor: 1,
+                    title_ru: 'Почистить кафель у пассажирского лифта',
+                    title_kg: 'Жүргүнчү лифттин жанындагы кафелди тазалоо',
+                    desc_ru: 'Отмыть следы побелки и пыли возле лифтового холла.',
+                    desc_kg: 'Лифттин жанындагы плиткадагы тактарды жууп тазалоо.',
+                    photoType: 'tile',
+                    customPhoto: null,
+                    authorRole: 'guest',
+                    status: 'active',
+                    createdAt: '11:20',
+                    createdTs: 1700000003
+                },
+                {
+                    id: 'seed_e1_f5',
+                    isHouse: false,
+                    zone: null,
+                    entrance: 1,
+                    floor: 5,
+                    title_ru: 'Починить ручку окна на площадке',
+                    title_kg: 'Аянтчадагы терезенин туткасын оңдоо',
+                    desc_ru: 'Ручка болтается, окно не прижимается плотно.',
+                    desc_kg: 'Тутка бошоп калган, терезе тыгыз жабылбайт.',
+                    photoType: 'window',
+                    customPhoto: null,
+                    authorRole: 'domkom_1',
+                    status: 'review',
+                    createdAt: '11:45',
+                    createdTs: 1700000002
+                },
+                {
+                    id: 'seed_e2_f4',
+                    isHouse: false,
+                    zone: null,
+                    entrance: 2,
+                    floor: 4,
+                    title_ru: 'Заменить лампу освещения на лестнице',
+                    title_kg: 'Тепкич аянтчасындагы жарык лампасын алмаштыруу',
+                    desc_ru: 'Перегорел светильник возле выхода на общий балкон.',
+                    desc_kg: 'Жалпы балконго чыгуучу жердеги чырак күйүп кеткен.',
+                    photoType: 'lamp',
+                    customPhoto: null,
+                    authorRole: 'guest',
+                    status: 'active',
+                    createdAt: '12:00',
+                    createdTs: 1700000001
+                },
+                {
+                    id: 'seed_e3_f8',
+                    isHouse: false,
+                    zone: null,
+                    entrance: 3,
+                    floor: 8,
+                    title_ru: 'Отмыть пятна на напольном кафеле',
+                    title_kg: 'Полдогу кафелдин тактарын жууп тазалоо',
+                    desc_ru: 'Пролили краску при ремонте квартиры на 8 этаже.',
+                    desc_kg: '8-кабаттагы батирди оңдоодо боёк төгүлүп калган.',
+                    photoType: 'tile',
+                    customPhoto: null,
+                    authorRole: 'domkom_3',
+                    status: 'review',
+                    createdAt: '12:30',
+                    createdTs: 1700000000
+                }
+            ];
+        }
+
+        // ==================== СОСТОЯНИЕ ПРИЛОЖЕНИЯ ====================
+        const state = {
+            lang: 'ru',
+            role: 'guest', // 'guest' | 'domkom_1' | 'domkom_2' | 'domkom_3' | 'moderator'
+            selectedEntrance: 1,
+            floorFilterMode: 'all',
+            floorOrderAsc: true,
+            activeLocation: null, // { type: 'house' } | { type: 'floor', entrance: 1, floor: 1 }
+            houseZoneFilter: 'all',
+            tasks: [],
+            formPhotoDataUrl: null,
+            pendingConfirmCallback: null,
+            isCloudOnline: false
+        };
+
+        let db = null;
+        let auth = null;
+        let currentUser = null;
+        let appId = 'aalam-16et-app';
+        let toastTimer = null;
+
+        // ==================== ИНИЦИАЛИЗАЦИЯ ПРИЛОЖЕНИЯ И FIREBASE ====================
+        async function initApp() {
+            // 1. Восстанавливаем язык и роль из localStorage
+            try {
+                const savedLang = localStorage.getItem(STORAGE_LANG_KEY);
+                if (savedLang === 'ru' || savedLang === 'kg') state.lang = savedLang;
+
+                const savedRole = localStorage.getItem(STORAGE_ROLE_KEY);
+                if (savedRole && ['guest', 'domkom_1', 'domkom_2', 'domkom_3', 'moderator'].includes(savedRole)) {
+                    state.role = savedRole;
+                }
+            } catch (e) {}
+
+            // 2. Загружаем локальный кэш задач сразу для мгновенного старта без пустого экрана
+            loadLocalTasksFallback();
+            populateStaticSelects();
+            renderAll();
+
+            // 3. Подключаем облачную синхронизацию Firebase (если доступна конфигурация среды)
+            try {
+                if (typeof __firebase_config !== 'undefined' && __firebase_config) {
+                    appId = typeof __app_id !== 'undefined' ? __app_id : 'aalam-16et-app';
+                    const firebaseConfig = JSON.parse(__firebase_config);
+                    const app = initializeApp(firebaseConfig);
+                    db = getFirestore(app);
+                    auth = getAuth(app);
+
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        const cred = await signInWithCustomToken(auth, __initial_auth_token);
+                        currentUser = cred.user;
+                    } else {
+                        const cred = await signInAnonymously(auth);
+                        currentUser = cred.user;
+                    }
+
+                    if (currentUser && db) {
+                        subscribeToCloudTasks();
+                    }
+                } else {
+                    setSyncStatus(false);
+                }
+            } catch (err) {
+                console.warn('Cloud sync unavailable, running in local fallback mode:', err);
+                setSyncStatus(false);
+            }
+        }
+
+        function loadLocalTasksFallback() {
+            try {
+                const raw = localStorage.getItem(STORAGE_TASKS_KEY);
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        state.tasks = parsed;
+                        return;
+                    }
+                }
+            } catch (e) {}
+            state.tasks = getInitialDemoTasks();
+            saveLocalTasksCache();
+        }
+
+        function saveLocalTasksCache() {
+            try {
+                localStorage.setItem(STORAGE_TASKS_KEY, JSON.stringify(state.tasks));
+            } catch (e) {}
+        }
+
+        function setSyncStatus(isOnline) {
+            state.isCloudOnline = isOnline;
+            const dot = document.getElementById('syncStatusDot');
+            const text = document.getElementById('syncStatusText');
+            const badge = document.getElementById('syncStatusBadge');
+            if (!dot || !text || !badge) return;
+
+            if (isOnline) {
+                dot.className = 'w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse';
+                badge.className = 'inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-50 text-[10px] font-bold text-emerald-700 border border-emerald-200 shrink-0';
+                text.textContent = t('syncOnline');
+            } else {
+                dot.className = 'w-1.5 h-1.5 rounded-full bg-slate-400';
+                badge.className = 'inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-slate-100 text-[10px] font-bold text-slate-600 shrink-0';
+                text.textContent = t('syncLocal');
+            }
+        }
+
+        function subscribeToCloudTasks() {
+            if (!db || !currentUser) return;
+            const tasksCol = collection(db, 'artifacts', appId, 'public', 'data', 'aalam_tasks');
+
+            onSnapshot(
+                tasksCol,
+                async (snapshot) => {
+                    setSyncStatus(true);
+                    if (snapshot.empty) {
+                        // Если облачная база пуста при первом запуске — загружаем демо-задачи
+                        const initial = getInitialDemoTasks();
+                        for (const item of initial) {
+                            await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'aalam_tasks', item.id), item);
+                        }
+                        return;
+                    }
+
+                    const cloudList = [];
+                    snapshot.forEach((docSnap) => {
+                        cloudList.push({ id: docSnap.id, ...docSnap.data() });
+                    });
+                    cloudList.sort((a, b) => (b.createdTs || 0) - (a.createdTs || 0));
+
+                    state.tasks = cloudList;
+                    saveLocalTasksCache();
+                    renderAll();
+                },
+                (error) => {
+                    console.warn('Firestore snapshot error:', error);
+                    setSyncStatus(false);
+                }
+            );
+        }
+
+        // ==================== ПРАВА ДОСТУПА ПО РОЛЯМ ====================
+        function getManagedEntranceForRole(role) {
+            if (role === 'domkom_1') return 1;
+            if (role === 'domkom_2') return 2;
+            if (role === 'domkom_3') return 3;
+            return null; // 'moderator' управляет всеми, 'guest' ни одним
+        }
+
+        // Проверка: может ли текущий пользователь поставить 2-ю галочку или удалить конкретную задачу
+        function canManageTask(task) {
+            if (state.role === 'moderator') return true;
+            const managedEnt = getManagedEntranceForRole(state.role);
+            if (!managedEnt) return false;
+
+            // Домком любого из 3 подъездов может подтверждать/удалять общедомовые задачи ("Дом")
+            if (task.isHouse) return true;
+            // А в подъездах — только задачи своего подъезда!
+            return Number(task.entrance) === managedEnt;
+        }
+
+        function getRoleDisplayName(roleKey, shortMode = false) {
+            if (roleKey === 'domkom_1') return t('roleDomkom1');
+            if (roleKey === 'domkom_2') return t('roleDomkom2');
+            if (roleKey === 'domkom_3') return t('roleDomkom3');
+            if (roleKey === 'moderator') return t('roleModerator');
+            return shortMode ? t('roleGuestShort') : t('roleGuestFull');
+        }
+
+        // ==================== ПЕРЕВОДЫ И ФОРМАТИРОВАНИЕ ====================
+        function t(key, ...args) {
+            const langDict = DICT[state.lang] || DICT.ru;
+            const val = langDict[key] !== undefined ? langDict[key] : DICT.ru[key];
+            return typeof val === 'function' ? val(...args) : val;
+        }
+
+        function getTaskTitle(task) {
+            if (state.lang === 'kg' && task.title_kg) return task.title_kg;
+            return task.title_ru || task.title_kg || '';
+        }
+
+        function getTaskDesc(task) {
+            if (state.lang === 'kg' && task.desc_kg) return task.desc_kg;
+            return task.desc_ru || task.desc_kg || '';
+        }
+
+        function getTaskPhotoUrl(task) {
+            if (task.customPhoto) return task.customPhoto;
+            return getDemoSvgDataUri(task.photoType || 'tile');
+        }
+
+        function toggleLanguage() {
+            state.lang = state.lang === 'ru' ? 'kg' : 'ru';
+            try {
+                localStorage.setItem(STORAGE_LANG_KEY, state.lang);
+            } catch (e) {}
+            populateStaticSelects();
+            renderAll();
+        }
+
+        function populateStaticSelects() {
+            const locSelect = document.getElementById('formLocationSelect');
+            const prevLoc = locSelect.value || 'floor';
+            locSelect.innerHTML = `
+                <option value="house">${t('locHouseOption')}</option>
+                <option value="floor">${t('locEntranceOption')}</option>
+            `;
+            locSelect.value = prevLoc;
+
+            const entSelect = document.getElementById('formEntranceSelect');
+            const prevEnt = entSelect.value || '1';
+            entSelect.innerHTML = '';
+            for (let i = 1; i <= ENTRANCES_COUNT; i++) {
+                const opt = document.createElement('option');
+                opt.value = String(i);
+                opt.textContent = t('entranceName', i);
+                entSelect.appendChild(opt);
+            }
+            entSelect.value = prevEnt;
+
+            const flSelect = document.getElementById('formFloorSelect');
+            const prevFl = flSelect.value || '1';
+            flSelect.innerHTML = '';
+            for (let f = 1; f <= FLOORS_COUNT; f++) {
+                const opt = document.createElement('option');
+                opt.value = String(f);
+                opt.textContent = t('floorShort', f);
+                flSelect.appendChild(opt);
+            }
+            flSelect.value = prevFl;
+
+            const zoneSelect = document.getElementById('formZoneSelect');
+            const prevZone = zoneSelect.value || 'yard';
+            zoneSelect.innerHTML = '';
+            ZONES.forEach(z => {
+                const opt = document.createElement('option');
+                opt.value = z.id;
+                opt.textContent = `${z.icon} ${z[state.lang]}`;
+                zoneSelect.appendChild(opt);
+            });
+            zoneSelect.value = prevZone;
+        }
+
+        // ==================== ПОЛНЫЙ РЕНДЕР ИНТЕРФЕЙСА ====================
+        function renderAll() {
+            document.title = `${t('appTitle')}`;
+            document.getElementById('headerAppTitle').textContent = t('appTitle');
+            document.getElementById('headerAppSubtitle').textContent = t('appSubtitle');
+            setSyncStatus(state.isCloudOnline);
+
+            // Переключатель языка
+            const badgeRu = document.getElementById('langBadgeRu');
+            const badgeKg = document.getElementById('langBadgeKg');
+            if (state.lang === 'ru') {
+                badgeRu.className = 'px-1.5 py-0.5 rounded-md bg-white text-blue-600 shadow-xs';
+                badgeKg.className = 'px-1.5 py-0.5 rounded-md text-slate-500';
+            } else {
+                badgeRu.className = 'px-1.5 py-0.5 rounded-md text-slate-500';
+                badgeKg.className = 'px-1.5 py-0.5 rounded-md bg-white text-blue-600 shadow-xs';
+            }
+
+            // Кнопка и баннер активной роли (Жилец / Домком 1..3 / Модератор)
+            const roleBtn = document.getElementById('roleAccessBtn');
+            const roleBanner = document.getElementById('roleActiveBanner');
+            const isElevated = state.role !== 'guest';
+
+            if (isElevated) {
+                roleBtn.className = 'h-11 px-2.5 rounded-xl bg-amber-100 text-amber-950 border border-amber-300 text-[11px] font-extrabold flex items-center gap-1 max-w-[155px] transition-all';
+                document.getElementById('roleAccessIcon').textContent = '🛡️';
+                document.getElementById('roleAccessLabel').textContent = getRoleDisplayName(state.role, true);
+
+                roleBanner.classList.remove('hidden');
+                document.getElementById('roleBannerTitle').textContent = getRoleDisplayName(state.role, false);
+                const managedEnt = getManagedEntranceForRole(state.role);
+                document.getElementById('roleBannerSub').textContent = managedEnt
+                    ? t('roleBannerSubDomkom', managedEnt)
+                    : t('roleBannerSubMod');
+                document.getElementById('roleLogoutBtn').textContent = t('logoutBtn');
+            } else {
+                roleBtn.className = 'h-11 px-2.5 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-slate-700 border border-slate-200/80 text-[11px] font-bold flex items-center gap-1 max-w-[155px] transition-all';
+                document.getElementById('roleAccessIcon').textContent = '👤';
+                document.getElementById('roleAccessLabel').textContent = t('roleGuestShort');
+                roleBanner.classList.add('hidden');
+            }
+
+            // Кнопка выбора подъезда в шапке
+            const entStats = getEntranceStats(state.selectedEntrance);
+            document.getElementById('headerEntranceNum').textContent = String(state.selectedEntrance);
+            document.getElementById('headerEntranceTitle').textContent = t('entranceName', state.selectedEntrance);
+            document.getElementById('headerEntranceSummary').textContent = t('entranceSummary', entStats.active, entStats.review, entStats.approved);
+            document.getElementById('headerChangeBtnText').textContent = t('changeBtn');
+
+            const managedEnt = getManagedEntranceForRole(state.role);
+            const managedBadge = document.getElementById('headerEntranceManagedBadge');
+            if (managedEnt === state.selectedEntrance) {
+                managedBadge.textContent = t('yourEntranceBadge');
+                managedBadge.classList.remove('hidden');
+            } else {
+                managedBadge.classList.add('hidden');
+            }
+
+            // Фильтры этажей
+            const btnAll = document.getElementById('filterModeAllBtn');
+            const btnTasks = document.getElementById('filterModeTasksBtn');
+            btnAll.textContent = t('filterAllFloors');
+            btnTasks.textContent = t('filterWithTasks');
+            if (state.floorFilterMode === 'all') {
+                btnAll.className = 'flex-1 h-9 px-2.5 rounded-lg text-xs font-bold bg-white text-slate-900 shadow-xs transition-all';
+                btnTasks.className = 'flex-1 h-9 px-2.5 rounded-lg text-xs font-bold text-slate-600 transition-all';
+            } else {
+                btnAll.className = 'flex-1 h-9 px-2.5 rounded-lg text-xs font-bold text-slate-600 transition-all';
+                btnTasks.className = 'flex-1 h-9 px-2.5 rounded-lg text-xs font-bold bg-white text-slate-900 shadow-xs transition-all';
+            }
+            document.getElementById('sortOrderText').textContent = state.floorOrderAsc ? '1 → 16' : '16 → 1';
+            document.getElementById('fabAddTaskText').textContent = t('fabAddTask');
+
+            // Тексты модалок
+            document.getElementById('entranceSheetTitle').textContent = t('entranceSheetTitle');
+            document.getElementById('entranceSheetSub').textContent = t('entranceSheetSub');
+            document.getElementById('pinModalTitle').textContent = t('pinTitle');
+            document.getElementById('pinModalDesc').textContent = t('pinDesc');
+            document.getElementById('pinHintsHeader').textContent = t('pinHintsHeader');
+            document.getElementById('hintDomkom1').textContent = t('entranceName', 1);
+            document.getElementById('hintDomkom2').textContent = t('entranceName', 2);
+            document.getElementById('hintDomkom3').textContent = t('entranceName', 3);
+            document.getElementById('hintModerator').textContent = t('roleModerator');
+            document.getElementById('pinErrorText').textContent = t('pinError');
+            document.getElementById('pinCancelBtn').textContent = t('cancelBtn');
+            document.getElementById('pinSubmitBtn').textContent = t('loginBtn');
+            document.getElementById('pinModalLogoutBtn').textContent = t('logoutBtn');
+
+            document.getElementById('addSheetTitle').textContent = t('addSheetTitle');
+            document.getElementById('addSheetSub').textContent = t('addSheetSub');
+            document.getElementById('formLocationTypeLabel').textContent = t('locTypeLabel');
+            document.getElementById('formEntranceLabel').textContent = t('entranceLabel');
+            document.getElementById('formFloorLabel').textContent = t('floorLabel');
+            document.getElementById('formZoneLabel').textContent = t('zoneLabel');
+            document.getElementById('formTitleLabel').textContent = t('taskTitleLabel');
+            document.getElementById('formTitleInput').placeholder = t('taskTitlePlaceholder');
+            document.getElementById('formDescLabel').textContent = t('taskDescLabel');
+            document.getElementById('formDescInput').placeholder = t('taskDescPlaceholder');
+            document.getElementById('formPhotoLabel').textContent = t('photoLabel');
+            document.getElementById('formPresetPhotoBtn').textContent = t('presetPhotoBtn');
+            document.getElementById('formPhotoUploadText').textContent = t('photoUploadText');
+            document.getElementById('formSubmitTaskBtn').textContent = t('publishBtn');
+            document.getElementById('confirmDialogCancelBtn').textContent = t('cancelBtn');
+
+            renderPinnedHouseCard();
+            renderFloorsColumn();
+
+            if (state.activeLocation) {
+                renderTaskListScreen();
+            }
+        }
+
+        // ==================== СТАТИСТИКА И КАРТОЧКИ ГЛАВНОГО ЭКРАНА ====================
+        function getEntranceStats(entranceNum) {
+            const list = state.tasks.filter(item => !item.isHouse && Number(item.entrance) === entranceNum);
+            return {
+                total: list.length,
+                active: list.filter(x => x.status === 'active').length,
+                review: list.filter(x => x.status === 'review').length,
+                approved: list.filter(x => x.status === 'approved').length
+            };
+        }
+
+        function buildStatusBadgesHtml(tasksArray) {
+            if (!tasksArray || tasksArray.length === 0) {
+                return `<span class="text-xs font-medium text-slate-400">${t('noTasksText')}</span>`;
+            }
+            const active = tasksArray.filter(x => x.status === 'active').length;
+            const review = tasksArray.filter(x => x.status === 'review').length;
+            const approved = tasksArray.filter(x => x.status === 'approved').length;
+
+            let html = '';
+            if (active > 0) {
+                html += `<span class="px-2 py-0.5 rounded-lg bg-amber-100 text-amber-800 text-[11px] font-bold">${t('badgeActive', active)}</span>`;
+            }
+            if (review > 0) {
+                html += `<span class="px-2 py-0.5 rounded-lg bg-blue-100 text-blue-800 text-[11px] font-bold">${t('badgeReview', review)}</span>`;
+            }
+            if (approved > 0) {
+                html += `<span class="px-2 py-0.5 rounded-lg bg-emerald-100 text-emerald-700 text-[11px] font-bold">${t('badgeApproved', approved)}</span>`;
+            }
+            return html;
+        }
+
+        function renderPinnedHouseCard() {
+            const container = document.getElementById('pinnedHouseCardContainer');
+            const houseTasks = state.tasks.filter(item => item.isHouse);
+            const badgesHtml = buildStatusBadgesHtml(houseTasks);
+
+            container.innerHTML = `
+                <button type="button" onclick="openHouseTasks()" class="w-full min-h-[76px] p-3.5 rounded-2xl bg-gradient-to-r from-indigo-50 via-white to-blue-50/70 border-2 border-indigo-200 hover:border-indigo-400 shadow-xs flex items-center justify-between gap-3 text-left active:scale-[0.99] transition-all">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <div class="w-12 h-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center shadow-sm shrink-0">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                            </svg>
+                        </div>
+                        <div class="min-w-0">
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-base font-extrabold text-slate-900">${t('houseTitle')}</span>
+                                <span class="px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-700 text-[10px] font-extrabold">${t('wholeHouseTag')}</span>
+                            </div>
+                            <p class="text-xs font-medium text-slate-500 truncate mt-0.5">${t('houseSub')}</p>
+                            <div class="flex flex-wrap items-center gap-1.5 mt-1.5">${badgesHtml}</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-1.5 shrink-0">
+                        <span class="w-7 h-7 rounded-full bg-indigo-100 text-indigo-800 text-xs font-extrabold flex items-center justify-center">${houseTasks.length}</span>
+                        <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" stroke-width="2.3" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                    </div>
+                </button>
+            `;
+        }
+
+        function renderFloorsColumn() {
+            const container = document.getElementById('floorsColumnList');
+            const floorNumbers = [];
+            for (let f = 1; f <= FLOORS_COUNT; f++) floorNumbers.push(f);
+            if (!state.floorOrderAsc) floorNumbers.reverse();
+
+            let html = '';
+            floorNumbers.forEach(floorNum => {
+                const floorTasks = state.tasks.filter(
+                    item => !item.isHouse && Number(item.entrance) === state.selectedEntrance && Number(item.floor) === floorNum
+                );
+
+                if (state.floorFilterMode === 'with_tasks' && floorTasks.length === 0) {
+                    return;
+                }
+
+                const hasActive = floorTasks.some(x => x.status === 'active');
+                const hasReview = floorTasks.some(x => x.status === 'review');
+                const allApproved = floorTasks.length > 0 && floorTasks.every(x => x.status === 'approved');
+
+                let borderClass = 'border-slate-200/90 bg-white';
+                let badgeBg = 'bg-slate-100 text-slate-700';
+                if (hasActive) {
+                    borderClass = 'border-amber-300 bg-white';
+                    badgeBg = 'bg-amber-500 text-white';
+                } else if (hasReview) {
+                    borderClass = 'border-blue-300 bg-white';
+                    badgeBg = 'bg-blue-600 text-white';
+                } else if (allApproved) {
+                    borderClass = 'border-emerald-200 bg-emerald-50/30';
+                    badgeBg = 'bg-emerald-600 text-white';
+                }
+
+                html += `
+                    <button type="button" onclick="openFloorTasks(${floorNum})" class="w-full min-h-[64px] px-3.5 py-2.5 rounded-2xl border ${borderClass} shadow-xs flex items-center justify-between gap-3 text-left active:scale-[0.99] transition-all">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <div class="w-11 h-11 rounded-xl ${badgeBg} font-extrabold text-sm flex items-center justify-center shrink-0">
+                                ${floorNum}
+                            </div>
+                            <div class="min-w-0">
+                                <div class="text-sm font-extrabold text-slate-900">${t('floorTitle', floorNum)}</div>
+                                <div class="flex flex-wrap items-center gap-1.5 mt-1">
+                                    ${buildStatusBadgesHtml(floorTasks)}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-1.5 shrink-0">
+                            ${floorTasks.length > 0 ? `<span class="w-6 h-6 rounded-full bg-slate-100 text-slate-700 text-xs font-extrabold flex items-center justify-center">${floorTasks.length}</span>` : ''}
+                            <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path>
+                            </svg>
+                        </div>
+                    </button>
+                `;
+            });
+
+            if (!html) {
+                html = `
+                    <div class="bg-white rounded-2xl p-6 text-center border border-slate-200">
+                        <p class="text-sm font-bold text-slate-700">${t('noTasksText')}</p>
+                        <button type="button" onclick="setFloorFilterMode('all')" class="mt-3 h-10 px-4 rounded-xl bg-blue-600 text-white text-xs font-bold">
+                            ${t('filterAllFloors')}
+                        </button>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = html;
+        }
+
+        function setFloorFilterMode(mode) {
+            state.floorFilterMode = mode;
+            renderAll();
+        }
+
+        function toggleFloorSortOrder() {
+            state.floorOrderAsc = !state.floorOrderAsc;
+            renderAll();
+        }
+
+        // ==================== ВЫБОР ПОДЪЕЗДА (BOTTOM SHEET) ====================
+        function openEntranceSheet() {
+            const listEl = document.getElementById('entranceOptionsList');
+            const managedEnt = getManagedEntranceForRole(state.role);
+            let html = '';
+
+            for (let e = 1; e <= ENTRANCES_COUNT; e++) {
+                const stats = getEntranceStats(e);
+                const isSelected = state.selectedEntrance === e;
+                const isManaged = managedEnt === e;
+                html += `
+                    <button type="button" onclick="selectEntrance(${e})" class="w-full p-3.5 rounded-2xl border-2 ${isSelected ? 'border-blue-600 bg-blue-50/50' : 'border-slate-200 bg-white'} flex items-center justify-between gap-3 text-left active:scale-[0.99] transition-all">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <div class="w-11 h-11 rounded-xl ${isSelected ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-800'} font-extrabold text-base flex items-center justify-center shrink-0">
+                                ${e}
+                            </div>
+                            <div class="min-w-0">
+                                <div class="flex flex-wrap items-center gap-1.5">
+                                    <span class="text-sm font-extrabold text-slate-900">${t('entranceName', e)}</span>
+                                    ${isSelected ? `<span class="px-2 py-0.5 rounded-md bg-blue-600 text-white text-[10px] font-bold">${t('selectedTag')}</span>` : ''}
+                                    ${isManaged ? `<span class="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 text-[10px] font-extrabold">🛡️ ${t('yourEntranceBadge')}</span>` : ''}
+                                </div>
+                                <div class="text-xs text-slate-500 mt-0.5">${t('entranceSummary', stats.active, stats.review, stats.approved)}</div>
+                            </div>
+                        </div>
+                        <span class="text-sm font-extrabold text-slate-700 shrink-0">${stats.total}</span>
+                    </button>
+                `;
+            }
+            listEl.innerHTML = html;
+            document.getElementById('entranceSheetBackdrop').classList.remove('hidden');
+        }
+
+        function closeEntranceSheet() {
+            document.getElementById('entranceSheetBackdrop').classList.add('hidden');
+        }
+
+        function selectEntrance(num) {
+            state.selectedEntrance = num;
+            closeEntranceSheet();
+            if (state.activeLocation && state.activeLocation.type === 'floor') {
+                state.activeLocation.entrance = num;
+            }
+            renderAll();
+        }
+
+        // ==================== ЭКРАН СПИСКА ЗАДАНИЙ (ЭТАЖ ИЛИ ДОМ) ====================
+        function openHouseTasks() {
+            state.activeLocation = { type: 'house' };
+            state.houseZoneFilter = 'all';
+            document.getElementById('mainListView').classList.add('hidden');
+            document.getElementById('taskListView').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'instant' });
+            renderTaskListScreen();
+        }
+
+        function openFloorTasks(floorNum) {
+            state.activeLocation = {
+                type: 'floor',
+                entrance: state.selectedEntrance,
+                floor: floorNum
+            };
+            document.getElementById('mainListView').classList.add('hidden');
+            document.getElementById('taskListView').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'instant' });
+            renderTaskListScreen();
+        }
+
+        function closeTaskListView() {
+            state.activeLocation = null;
+            document.getElementById('taskListView').classList.add('hidden');
+            document.getElementById('mainListView').classList.remove('hidden');
+            renderAll();
+        }
+
+        function setHouseZoneFilter(zoneId) {
+            state.houseZoneFilter = zoneId;
+            renderTaskListScreen();
+        }
+
+        function renderTaskListScreen() {
+            if (!state.activeLocation) return;
+
+            const isHouse = state.activeLocation.type === 'house';
+            document.getElementById('backBtnLabel').textContent = t('backBtn');
+
+            const zonesBar = document.getElementById('houseZonesBar');
+            let filteredTasks = [];
+
+            if (isHouse) {
+                document.getElementById('taskViewSubtitle').textContent = t('wholeHouseTag');
+                document.getElementById('taskViewTitle').textContent = t('houseTitle');
+
+                const allHouse = state.tasks.filter(item => item.isHouse);
+                zonesBar.classList.remove('hidden');
+
+                const chips = [
+                    { id: 'all', icon: '📋', label: t('zoneAll'), count: allHouse.length },
+                    ...ZONES.map(z => ({
+                        id: z.id,
+                        icon: z.icon,
+                        label: z[state.lang],
+                        count: allHouse.filter(x => x.zone === z.id).length
+                    }))
+                ];
+
+                zonesBar.innerHTML = chips.map(ch => {
+                    const active = state.houseZoneFilter === ch.id;
+                    return `
+                        <button type="button" onclick="setHouseZoneFilter('${ch.id}')" class="h-9 px-3 rounded-xl text-xs font-bold flex items-center gap-1.5 shrink-0 transition-all ${active ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-700'}">
+                            <span>${ch.icon}</span>
+                            <span>${ch.label}</span>
+                            <span class="px-1.5 py-0.2 rounded-full text-[10px] ${active ? 'bg-white/20 text-white' : 'bg-white text-slate-600'}">${ch.count}</span>
+                        </button>
+                    `;
+                }).join('');
+
+                filteredTasks = state.houseZoneFilter === 'all'
+                    ? allHouse
+                    : allHouse.filter(x => x.zone === state.houseZoneFilter);
+            } else {
+                const { entrance, floor } = state.activeLocation;
+                document.getElementById('taskViewSubtitle').textContent = t('entranceName', entrance);
+                document.getElementById('taskViewTitle').textContent = t('floorTitle', floor);
+                zonesBar.classList.add('hidden');
+
+                filteredTasks = state.tasks.filter(
+                    item => !item.isHouse && Number(item.entrance) === entrance && Number(item.floor) === floor
+                );
+            }
+
+            const container = document.getElementById('tasksCardsContainer');
+            if (filteredTasks.length === 0) {
+                container.innerHTML = `
+                    <div class="bg-white rounded-3xl p-8 text-center border border-slate-200/80 shadow-xs mt-4">
+                        <div class="w-14 h-14 rounded-2xl bg-slate-100 text-2xl flex items-center justify-center mx-auto mb-3">✨</div>
+                        <h3 class="text-base font-extrabold text-slate-800">${t('emptyTasksTitle')}</h3>
+                        <p class="text-xs text-slate-500 mt-1.5 leading-relaxed">${t('emptyTasksSub')}</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const orderMap = { active: 0, review: 1, approved: 2 };
+            const sorted = [...filteredTasks].sort((a, b) => (orderMap[a.status] ?? 0) - (orderMap[b.status] ?? 0));
+            container.innerHTML = sorted.map(task => renderTaskCardHtml(task)).join('');
+        }
+
+        function renderTaskCardHtml(task) {
+            const title = escapeHtml(getTaskTitle(task));
+            const desc = escapeHtml(getTaskDesc(task));
+            const photoUrl = getTaskPhotoUrl(task);
+            const hasManageRights = canManageTask(task);
+
+            let statusBadge = `<span class="px-2.5 py-1 rounded-lg bg-amber-100 text-amber-800 text-[11px] font-extrabold">${t('statusActive')}</span>`;
+            if (task.status === 'review') {
+                statusBadge = `<span class="px-2.5 py-1 rounded-lg bg-blue-100 text-blue-800 text-[11px] font-extrabold">${t('statusReview')}</span>`;
+            } else if (task.status === 'approved') {
+                statusBadge = `<span class="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-700 text-[11px] font-extrabold">${t('statusApproved')}</span>`;
+            }
+
+            let locBadge = '';
+            if (task.isHouse) {
+                const zObj = ZONES.find(z => z.id === task.zone) || ZONES[3];
+                locBadge = `<span class="px-2.5 py-1 rounded-lg bg-indigo-600/90 text-white text-[11px] font-bold">${zObj.icon} ${zObj[state.lang]}</span>`;
+            } else {
+                locBadge = `<span class="px-2.5 py-1 rounded-lg bg-slate-900/80 text-white text-[11px] font-bold">${t('floorShort', task.floor)}</span>`;
+            }
+
+            const authorName = getRoleDisplayName(task.authorRole || 'guest', true);
+
+            // Шаг 1: 1-я галочка (доступна ЛЮБОМУ человеку: жильцу, исполнителю, домкому, модератору)
+            let step1Html = '';
+            if (task.status === 'active') {
+                step1Html = `
+                    <button type="button" onclick="toggleWorkerStep('${task.id}')" class="w-full min-h-[48px] px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow-sm active:scale-[0.99] transition-all">
+                        <span class="w-5 h-5 rounded-md border-2 border-white/80 flex items-center justify-center text-[11px]">✓</span>
+                        <span>${t('workerDoneBtn')}</span>
+                    </button>
+                `;
+            } else if (task.status === 'review') {
+                step1Html = `
+                    <button type="button" onclick="toggleWorkerStep('${task.id}')" class="w-full min-h-[46px] px-4 py-2 rounded-xl bg-blue-50 border border-blue-200 text-blue-900 font-bold text-xs flex items-center justify-center gap-2 active:scale-[0.99] transition-all">
+                        <span>${t('workerUndoBtn')}</span>
+                    </button>
+                `;
+            }
+
+            // Шаг 2: 2-я галочка (ТОЛЬКО Домком своего подъезда или Модератор)
+            let step2Html = '';
+            if (hasManageRights) {
+                if (task.status === 'review') {
+                    step2Html = `
+                        <div class="grid grid-cols-2 gap-2 mt-2">
+                            <button type="button" onclick="returnTaskToRework('${task.id}')" class="min-h-[46px] px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs">
+                                ↩ ${t('reworkBtn')}
+                            </button>
+                            <button type="button" onclick="approveTaskByDomkom('${task.id}')" class="min-h-[46px] px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-sm">
+                                ✓✓ ${t('domkomApproveBtn')}
+                            </button>
+                        </div>
+                    `;
+                } else if (task.status === 'active') {
+                    step2Html = `
+                        <button type="button" onclick="approveTaskByDomkom('${task.id}')" class="w-full mt-2 min-h-[44px] px-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 font-bold text-xs">
+                            ✓✓ ${t('domkomApproveBtn')}
+                        </button>
+                    `;
+                } else if (task.status === 'approved') {
+                    step2Html = `
+                        <div class="mt-2 flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl bg-emerald-50 border border-emerald-200">
+                            <span class="text-xs font-extrabold text-emerald-800">${t('domkomApprovedLabel')}</span>
+                            <button type="button" onclick="returnTaskToRework('${task.id}')" class="text-xs font-bold text-slate-600 underline">
+                                ${t('reworkBtn')}
+                            </button>
+                        </div>
+                    `;
+                }
+            } else {
+                const lockText = task.isHouse ? t('lockHintHouse') : t('lockHintEntrance', task.entrance);
+                if (task.status === 'review') {
+                    step2Html = `
+                        <button type="button" onclick="showToast('${escapeHtml(lockText)}', '🔒')" class="w-full mt-2 px-3 py-2.5 rounded-xl bg-slate-100 text-slate-500 text-[11px] font-semibold text-center">
+                            🔒 ${lockText}
+                        </button>
+                    `;
+                } else if (task.status === 'approved') {
+                    step2Html = `
+                        <div class="px-3 py-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-extrabold text-center">
+                            ${t('domkomApprovedLabel')}
+                        </div>
+                    `;
+                }
+            }
+
+            return `
+                <article class="bg-white rounded-3xl border border-slate-200/90 shadow-xs overflow-hidden">
+                    <div class="relative h-44 w-full bg-slate-200 cursor-pointer overflow-hidden" onclick="openLightbox('${task.id}')">
+                        <img src="${photoUrl}" alt="${title}" class="w-full h-full object-cover ${task.status === 'approved' ? 'opacity-80' : ''}">
+                        <div class="absolute top-2.5 left-2.5 flex items-center gap-1.5">
+                            ${locBadge}
+                        </div>
+                        <div class="absolute bottom-2.5 left-2.5 px-2.5 py-1 rounded-lg bg-black/60 text-white text-[10px] font-semibold">
+                            ${t('tapToZoom')}
+                        </div>
+                        ${hasManageRights ? `
+                            <button type="button" onclick="event.stopPropagation(); confirmDeleteTask('${task.id}')" class="absolute top-2.5 right-2.5 w-10 h-10 rounded-xl bg-rose-600/95 text-white text-sm font-bold flex items-center justify-center shadow-md active:scale-95" title="${t('deleteBtn')}">
+                                🗑️
+                            </button>
+                        ` : ''}
+                    </div>
+
+                    <div class="p-4">
+                        <div class="flex items-center justify-between gap-2 mb-2">
+                            ${statusBadge}
+                            <span class="text-[11px] font-medium text-slate-400">${escapeHtml(task.createdAt || '')}</span>
+                        </div>
+
+                        <h3 class="text-base font-extrabold text-slate-900 leading-snug">${title}</h3>
+                        ${desc ? `<p class="text-xs text-slate-600 mt-1 leading-relaxed">${desc}</p>` : ''}
+
+                        <div class="mt-2 text-[11px] text-slate-400 font-medium">
+                            ${t('authorLabel')} <span class="text-slate-600 font-semibold">${escapeHtml(authorName)}</span>
+                        </div>
+
+                        <div class="mt-3">
+                            ${step1Html}
+                            ${step2Html}
+                        </div>
+                    </div>
+                </article>
+            `;
+        }
+
+        // ==================== ОПЕРАЦИИ С БАЗОЙ (ОБЛАКО + LOCALSTORAGE) ====================
+        async function persistTaskUpdate(taskId, fields) {
+            const idx = state.tasks.findIndex(x => x.id === taskId);
+            if (idx === -1) return;
+            state.tasks[idx] = { ...state.tasks[idx], ...fields };
+            saveLocalTasksCache();
+            renderAll();
+
+            if (db && currentUser && state.isCloudOnline) {
+                try {
+                    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'aalam_tasks', taskId), fields);
+                } catch (e) {
+                    console.warn('Cloud updateDoc failed:', e);
+                }
+            }
+        }
+
+        async function toggleWorkerStep(taskId) {
+            const task = state.tasks.find(x => x.id === taskId);
+            if (!task || task.status === 'approved') return;
+
+            if (task.status === 'active') {
+                await persistTaskUpdate(taskId, { status: 'review' });
+                showToast(t('toastWorkerDone'), '✅');
+            } else if (task.status === 'review') {
+                await persistTaskUpdate(taskId, { status: 'active' });
+                showToast(t('toastWorkerUndone'), '↩️');
+            }
+        }
+
+        async function approveTaskByDomkom(taskId) {
+            const task = state.tasks.find(x => x.id === taskId);
+            if (!task || !canManageTask(task)) return;
+
+            await persistTaskUpdate(taskId, { status: 'approved' });
+            showToast(t('toastApproved'), '🛡️');
+        }
+
+        async function returnTaskToRework(taskId) {
+            const task = state.tasks.find(x => x.id === taskId);
+            if (!task || !canManageTask(task)) return;
+
+            await persistTaskUpdate(taskId, { status: 'active' });
+            showToast(t('toastRework'), '🔄');
+        }
+
+        function confirmDeleteTask(taskId) {
+            const task = state.tasks.find(x => x.id === taskId);
+            if (!task || !canManageTask(task)) return;
+
+            openConfirmDialog(t('confirmDeleteTitle'), t('confirmDeleteText'), async () => {
+                state.tasks = state.tasks.filter(x => x.id !== taskId);
+                saveLocalTasksCache();
+                renderAll();
+                showToast(t('toastTaskDeleted'), '🗑️');
+
+                if (db && currentUser && state.isCloudOnline) {
+                    try {
+                        await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'aalam_tasks', taskId));
+                    } catch (e) {
+                        console.warn('Cloud deleteDoc failed:', e);
+                    }
+                }
+            });
+        }
+
+        // ==================== ВХОД ДОМКОМОВ (1111, 2222, 3333) И МОДЕРАТОРА (0000) ====================
+        function openPinModal() {
+            document.getElementById('pinInputField').value = '';
+            document.getElementById('pinErrorText').classList.add('hidden');
+
+            const roleBox = document.getElementById('pinCurrentRoleBox');
+            if (state.role !== 'guest') {
+                roleBox.classList.remove('hidden');
+                document.getElementById('pinCurrentRoleText').textContent = `🛡️ ${getRoleDisplayName(state.role, false)}`;
+            } else {
+                roleBox.classList.add('hidden');
+            }
+
+            document.getElementById('pinModalBackdrop').classList.remove('hidden');
+            setTimeout(() => document.getElementById('pinInputField').focus(), 100);
+        }
+
+        function closePinModal() {
+            document.getElementById('pinModalBackdrop').classList.add('hidden');
+        }
+
+        function quickFillPin(code) {
+            document.getElementById('pinInputField').value = code;
+            submitPinCode(new Event('submit'));
+        }
+
+        function submitPinCode(event) {
+            event.preventDefault();
+            const val = document.getElementById('pinInputField').value.trim();
+            const matchedRole = PIN_ROLES[val];
+            if (matchedRole) {
+                state.role = matchedRole;
+                try {
+                    localStorage.setItem(STORAGE_ROLE_KEY, matchedRole);
+                } catch (e) {}
+
+                // Если вошёл домком конкретного подъезда — сразу переключаем на его подъезд
+                const ent = getManagedEntranceForRole(matchedRole);
+                if (ent) state.selectedEntrance = ent;
+
+                closePinModal();
+                renderAll();
+                showToast(t('toastRoleLogin', getRoleDisplayName(matchedRole, false)), '🛡️');
+            } else {
+                document.getElementById('pinErrorText').classList.remove('hidden');
+            }
+        }
+
+        function logoutRole() {
+            state.role = 'guest';
+            try {
+                localStorage.setItem(STORAGE_ROLE_KEY, 'guest');
+            } catch (e) {}
+            renderAll();
+            showToast(t('toastRoleLogout'), '👤');
+        }
+
+        // ==================== СОЗДАНИЕ ЗАДАЧИ (ОТКРЫТО ДЛЯ ВСЕХ) ====================
+        function openAddTaskSheet() {
+            populateStaticSelects();
+
+            if (state.activeLocation && state.activeLocation.type === 'house') {
+                document.getElementById('formLocationSelect').value = 'house';
+                if (state.houseZoneFilter !== 'all') {
+                    document.getElementById('formZoneSelect').value = state.houseZoneFilter;
+                }
+            } else if (state.activeLocation && state.activeLocation.type === 'floor') {
+                document.getElementById('formLocationSelect').value = 'floor';
+                document.getElementById('formEntranceSelect').value = String(state.activeLocation.entrance);
+                document.getElementById('formFloorSelect').value = String(state.activeLocation.floor);
+            } else {
+                document.getElementById('formLocationSelect').value = 'floor';
+                document.getElementById('formEntranceSelect').value = String(state.selectedEntrance);
+                document.getElementById('formFloorSelect').value = '1';
+            }
+
+            document.getElementById('formTitleInput').value = '';
+            document.getElementById('formDescInput').value = '';
+            clearFormPhoto();
+            onFormLocationChange();
+
+            document.getElementById('addTaskBackdrop').classList.remove('hidden');
+        }
+
+        function closeAddTaskSheet() {
+            document.getElementById('addTaskBackdrop').classList.add('hidden');
+        }
+
+        function onFormLocationChange() {
+            const locType = document.getElementById('formLocationSelect').value;
+            const entFloorRow = document.getElementById('formEntranceFloorRow');
+            const zoneRow = document.getElementById('formHouseZoneRow');
+
+            if (locType === 'house') {
+                entFloorRow.classList.add('hidden');
+                zoneRow.classList.remove('hidden');
+            } else {
+                entFloorRow.classList.remove('hidden');
+                zoneRow.classList.add('hidden');
+            }
+        }
+
+        function applyPresetDemoPhoto() {
+            const locType = document.getElementById('formLocationSelect').value;
+            let photoKey = 'tile';
+            if (locType === 'house') {
+                const z = document.getElementById('formZoneSelect').value;
+                const map = { yard: 'yard', roof: 'roof', parking: 'parking', general: 'lamp' };
+                photoKey = map[z] || 'yard';
+            } else {
+                const keys = ['tile', 'window', 'lamp'];
+                photoKey = keys[Math.floor(Math.random() * keys.length)];
+            }
+            state.formPhotoDataUrl = getDemoSvgDataUri(photoKey);
+            document.getElementById('formPhotoPreviewImg').src = state.formPhotoDataUrl;
+            document.getElementById('formPhotoPreviewBox').classList.remove('hidden');
+        }
+
+        function handlePhotoFileUpload(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const img = new Image();
+                img.onload = function () {
+                    const maxDim = 800;
+                    let w = img.width;
+                    let h = img.height;
+                    if (w > maxDim || h > maxDim) {
+                        if (w > h) {
+                            h = Math.round((h * maxDim) / w);
+                            w = maxDim;
+                        } else {
+                            w = Math.round((w * maxDim) / h);
+                            h = maxDim;
+                        }
+                    }
+                    const canvas = document.createElement('canvas');
+                    canvas.width = w;
+                    canvas.height = h;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, w, h);
+                    state.formPhotoDataUrl = canvas.toDataURL('image/jpeg', 0.65);
+
+                    document.getElementById('formPhotoPreviewImg').src = state.formPhotoDataUrl;
+                    document.getElementById('formPhotoPreviewBox').classList.remove('hidden');
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function clearFormPhoto() {
+            state.formPhotoDataUrl = null;
+            document.getElementById('formPhotoFileInput').value = '';
+            document.getElementById('formPhotoPreviewImg').src = '';
+            document.getElementById('formPhotoPreviewBox').classList.add('hidden');
+        }
+
+        async function submitNewTask(event) {
+            event.preventDefault();
+            const locType = document.getElementById('formLocationSelect').value;
+            const isHouse = locType === 'house';
+            const entrance = isHouse ? 0 : parseInt(document.getElementById('formEntranceSelect').value, 10);
+            const floor = isHouse ? 0 : parseInt(document.getElementById('formFloorSelect').value, 10);
+            const zone = isHouse ? document.getElementById('formZoneSelect').value : null;
+
+            const titleVal = document.getElementById('formTitleInput').value.trim();
+            const descVal = document.getElementById('formDescInput').value.trim();
+            if (!titleVal) return;
+
+            const now = new Date();
+            const hh = String(now.getHours()).padStart(2, '0');
+            const mm = String(now.getMinutes()).padStart(2, '0');
+
+            const zonePhotoMap = { yard: 'yard', roof: 'roof', parking: 'parking', general: 'lamp' };
+            const newId = 'task_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+
+            const newTask = {
+                id: newId,
+                isHouse: isHouse,
+                zone: zone,
+                entrance: entrance,
+                floor: floor,
+                title_ru: titleVal,
+                title_kg: titleVal,
+                desc_ru: descVal,
+                desc_kg: descVal,
+                photoType: isHouse ? (zonePhotoMap[zone] || 'yard') : 'tile',
+                customPhoto: state.formPhotoDataUrl || null,
+                authorRole: state.role,
+                status: 'active',
+                createdAt: `${hh}:${mm}`,
+                createdTs: Date.now()
+            };
+
+            state.tasks.unshift(newTask);
+            saveLocalTasksCache();
+
+            if (!isHouse) {
+                state.selectedEntrance = entrance;
+            }
+
+            closeAddTaskSheet();
+            renderAll();
+            showToast(t('toastTaskAdded'), '✅');
+
+            if (db && currentUser && state.isCloudOnline) {
+                try {
+                    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'aalam_tasks', newId), newTask);
+                } catch (e) {
+                    console.warn('Cloud setDoc failed:', e);
+                }
+            }
+        }
+
+        // ==================== DIALOG, LIGHTBOX, TOAST, ESCAPE ====================
+        function openConfirmDialog(title, text, onConfirm) {
+            document.getElementById('confirmDialogTitle').textContent = title;
+            document.getElementById('confirmDialogText').textContent = text;
+            document.getElementById('confirmDialogOkBtn').textContent = t('confirmOkBtn');
+            state.pendingConfirmCallback = onConfirm;
+
+            document.getElementById('confirmDialogOkBtn').onclick = function () {
+                const cb = state.pendingConfirmCallback;
+                closeConfirmDialog();
+                if (typeof cb === 'function') cb();
+            };
+            document.getElementById('confirmDialogBackdrop').classList.remove('hidden');
+        }
+
+        function closeConfirmDialog() {
+            state.pendingConfirmCallback = null;
+            document.getElementById('confirmDialogBackdrop').classList.add('hidden');
+        }
+
+        function openLightbox(taskId) {
+            const task = state.tasks.find(x => x.id === taskId);
+            if (!task) return;
+            document.getElementById('lightboxImage').src = getTaskPhotoUrl(task);
+            document.getElementById('lightboxCaption').textContent = getTaskTitle(task);
+            document.getElementById('lightboxBackdrop').classList.remove('hidden');
+        }
+
+        function closeLightbox() {
+            document.getElementById('lightboxBackdrop').classList.add('hidden');
+        }
+
+        function showToast(message, icon = 'ℹ️') {
+            const box = document.getElementById('toastBox');
+            document.getElementById('toastText').textContent = message;
+            document.getElementById('toastIcon').textContent = icon;
+            box.classList.remove('hidden');
+
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
+                box.classList.add('hidden');
+            }, 3000);
+        }
+
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        // Экспорт обработчиков в window для inline-событий HTML
+        Object.assign(window, {
+            toggleLanguage,
+            openPinModal,
+            closePinModal,
+            quickFillPin,
+            submitPinCode,
+            logoutRole,
+            openEntranceSheet,
+            closeEntranceSheet,
+            selectEntrance,
+            setFloorFilterMode,
+            toggleFloorSortOrder,
+            openHouseTasks,
+            openFloorTasks,
+            closeTaskListView,
+            setHouseZoneFilter,
+            toggleWorkerStep,
+            approveTaskByDomkom,
+            returnTaskToRework,
+            confirmDeleteTask,
+            openAddTaskSheet,
+            closeAddTaskSheet,
+            onFormLocationChange,
+            applyPresetDemoPhoto,
+            handlePhotoFileUpload,
+            clearFormPhoto,
+            submitNewTask,
+            closeConfirmDialog,
+            openLightbox,
+            closeLightbox,
+            showToast
+        });
+
+        window.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>

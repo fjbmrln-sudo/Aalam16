@@ -104,11 +104,16 @@
       white-space: nowrap;
     }
 
+    .sync-badge.offline {
+      color: var(--warning);
+      background: var(--warning-soft);
+    }
+
     .sync-dot {
       width: 6px;
       height: 6px;
       border-radius: 50%;
-      background: var(--success);
+      background: currentColor;
     }
 
     .topbar-actions {
@@ -507,11 +512,6 @@
       color: var(--success);
     }
 
-    .check-btn:disabled {
-      opacity: 0.55;
-      cursor: not-allowed;
-    }
-
     .task-footer {
       display: flex;
       align-items: center;
@@ -728,20 +728,6 @@
       cursor: pointer;
     }
 
-    .secondary-btn {
-      width: 100%;
-      border: 1px solid var(--line);
-      background: var(--surface-2);
-      color: var(--text);
-      font-size: 13px;
-      font-weight: 700;
-      padding: 11px 14px;
-      border-radius: 12px;
-      min-height: 42px;
-      cursor: pointer;
-      margin-top: 8px;
-    }
-
     .preview-thumb {
       width: 100%;
       max-height: 190px;
@@ -839,7 +825,7 @@
             <button type="button" class="lang-btn" data-lang="kg" onclick="setLang('kg')">KG</button>
           </div>
           <button type="button" class="role-btn" id="roleBtn" onclick="openAuthModal()">
-            <span id="roleBtnIcon">🔑</span>
+            <span>🔑</span>
             <span id="roleBtnText">Войти</span>
           </button>
         </div>
@@ -887,7 +873,7 @@
         <button type="button" class="close-btn" onclick="closeModal('authModal')">✕</button>
       </div>
       <p style="font-size:13px;color:var(--muted);margin:0 0 12px;" id="authDesc">
-        Введите PIN-код для подтверждения приёмки (2-я галочка) и удаления задач.
+        Введите PIN-код для приёмки работ (2-я галочка) и удаления задач.
       </p>
       <div id="activeRoleBanner" style="display:none;background:var(--primary-soft);border:1px solid #bfdbfe;border-radius:12px;padding:10px 12px;margin-bottom:12px;align-items:center;justify-content:space-between;gap:8px;">
         <span id="activeRoleLabel" style="font-size:13px;font-weight:800;color:var(--primary);"></span>
@@ -963,16 +949,21 @@
       '9042': { role: 'moderator', entrance: null }
     };
 
-    const STORAGE_KEY_TASKS = 'aalam16_tasks_v1';
+    const DB_URL = 'https://aalam16-7a119-default-rtdb.europe-west1.firebasedatabase.app';
+
+    const STORAGE_KEY_TASKS_CACHE = 'aalam16_tasks_cache_v1';
+    const STORAGE_KEY_MIGRATED = 'aalam16_migrated_to_cloud_v1';
     const STORAGE_KEY_LANG = 'aalam16_lang_v1';
     const STORAGE_KEY_ROLE = 'aalam16_role_v1';
 
+    const DEMO_IDS = new Set(['t-1', 't-2', 't-3', 't-4', 't-5']);
     const ZONES = ['yard', 'roof', 'parking', 'common'];
 
     const I18N = {
       ru: {
         brand: 'Aalam 16эт',
         online: 'Онлайн',
+        offline: 'Офлайн / кэш',
         login: 'Войти',
         entranceLabel: 'Выбранный подъезд',
         entranceName: (n) => `Подъезд №${n}`,
@@ -1014,15 +1005,16 @@
         createSubmit: 'Опубликовать задание',
         taskCreated: 'Задание добавлено',
         check1: '✓ 1. Сделано',
-        check1Done: '✓ 1. Сделано (исполнитель)',
+        check1Done: '✓ 1. Сделано',
         check2: '✓ 2. Принято',
-        check2Done: '✓✓ 2. Принято домкомом',
+        check2Done: '✓✓ 2. Принято',
         needAuthCheck2: '2-ю галочку ставит только домком подъезда или модератор',
         wrongEntrance: (n) => `Доступ только для домкома подъезда №${n} или модератора`,
         deleteBtn: 'Удалить',
         confirmDelete: 'Удалить это задание?',
         deletedToast: 'Задание удалено',
         emptyTasks: 'В этом разделе пока нет заданий по выбранному фильтру.',
+        migratedToast: (c) => `Перенесено задач в общую базу: ${c}`,
         zones: {
           all: 'Все зоны',
           yard: 'Двор',
@@ -1030,12 +1022,12 @@
           parking: 'Подземный паркинг',
           common: 'Общее по дому'
         },
-        createdAtLabel: 'Добавлено',
-        byResident: 'Житель'
+        createdAtLabel: 'Добавлено'
       },
       kg: {
         brand: 'Aalam 16-кабат',
         online: 'Онлайн',
+        offline: 'Офлайн / кэш',
         login: 'Кирүү',
         entranceLabel: 'Тандалган подъезд',
         entranceName: (n) => `№${n} подъезд`,
@@ -1077,15 +1069,16 @@
         createSubmit: 'Тапшырманы жарыялоо',
         taskCreated: 'Тапшырма кошулду',
         check1: '✓ 1. Аткарылды',
-        check1Done: '✓ 1. Аткарылды (аткаруучу)',
+        check1Done: '✓ 1. Аткарылды',
         check2: '✓ 2. Кабыл алынды',
-        check2Done: '✓✓ 2. Үй башчы кабыл алды',
+        check2Done: '✓✓ 2. Кабыл алынды',
         needAuthCheck2: '2-белгини подъезд башчысы же модератор гана коёт',
         wrongEntrance: (n) => `№${n} подъезд башчысына же модераторго гана уруксат`,
         deleteBtn: 'Өчүрүү',
         confirmDelete: 'Бул тапшырма өчүрүлсүнбү?',
         deletedToast: 'Тапшырма өчүрүлдү',
         emptyTasks: 'Тандалган чыпка боюнча тапшырмалар жок.',
+        migratedToast: (c) => `Жалпы базага өткөрүлдү: ${c}`,
         zones: {
           all: 'Баардык аймак',
           yard: 'Короо',
@@ -1093,129 +1086,24 @@
           parking: 'Жер астындагы паркинг',
           common: 'Жалпы үй боюнча'
         },
-        createdAtLabel: 'Кошулду',
-        byResident: 'Тургун'
+        createdAtLabel: 'Кошулду'
       }
     };
-
-    function createSamplePhoto(bg, accent, label) {
-      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="360" viewBox="0 0 600 360">
-        <rect width="600" height="360" fill="${bg}"/>
-        <rect x="36" y="36" width="528" height="288" rx="20" fill="#ffffff" fill-opacity="0.88"/>
-        <circle cx="110" cy="120" r="28" fill="${accent}" fill-opacity="0.2"/>
-        <path d="M110 104v20m0 8v4" stroke="${accent}" stroke-width="6" stroke-linecap="round"/>
-        <text x="156" y="128" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#0f172a">${label}</text>
-        <text x="46" y="294" font-family="Arial, sans-serif" font-size="16" fill="#64748b">Aalam 16эт • Фото фиксация</text>
-      </svg>`;
-      return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg);
-    }
-
-    const DEFAULT_TASKS = [
-      {
-        id: 't-1',
-        entrance: 1,
-        location: 'house',
-        zone: 'yard',
-        title: {
-          ru: 'Подмести брусчатку у входа и убрать опавшую листву',
-          kg: 'Кире бериштеги таш жолду шыпырып, жалбырактарды жыйноо'
-        },
-        desc: {
-          ru: 'Основная пешеходная дорожка от калитки к 1-му подъезду',
-          kg: 'Дарбазадан 1-подъездге чейинки негизги жөө жүрүүчү жол'
-        },
-        photo: createSamplePhoto('#fef3c7', '#d97706', 'Yard / Короо'),
-        workerDone: false,
-        domkomDone: false,
-        createdAt: '10:15'
-      },
-      {
-        id: 't-2',
-        entrance: 1,
-        location: 'house',
-        zone: 'parking',
-        title: {
-          ru: 'Проверить освещение на уровне -1 паркинга',
-          kg: '-1 паркинг кабатындагы жарыктандырууну текшерүү'
-        },
-        desc: {
-          ru: 'Мерцает светильник у рампы съезда',
-          kg: 'Түшүүчү рампанын жанындагы чырак өчүп-күйүп жатат'
-        },
-        photo: createSamplePhoto('#e0e7ff', '#2563eb', 'Parking / Паркинг'),
-        workerDone: true,
-        domkomDone: false,
-        createdAt: '09:40'
-      },
-      {
-        id: 't-3',
-        entrance: 1,
-        location: 5,
-        zone: null,
-        title: {
-          ru: 'Почистить кафель у лифтового холла',
-          kg: 'Лифт алдындагы кафелди тазалоо'
-        },
-        desc: {
-          ru: 'Следы строительной пыли и разводы на плитке',
-          kg: 'Плиткада курулуш чаңы жана тактар бар'
-        },
-        photo: createSamplePhoto('#dcfce7', '#16a34a', '5 Floor / 5-кабат'),
-        workerDone: false,
-        domkomDone: false,
-        createdAt: '11:05'
-      },
-      {
-        id: 't-4',
-        entrance: 2,
-        location: 12,
-        zone: null,
-        title: {
-          ru: 'Починить ручку окна на межэтажной площадке',
-          kg: 'Кабаттар аралык аянтчадагы терезе туткасын оңдоо'
-        },
-        desc: {
-          ru: 'Ручка прокручивается, окно плотно не прижимается',
-          kg: 'Тутка айланып жатат, терезе бекем жабылбайт'
-        },
-        photo: createSamplePhoto('#fee2e2', '#dc2626', '12 Floor / 12-кабат'),
-        workerDone: true,
-        domkomDone: true,
-        createdAt: '08:50'
-      },
-      {
-        id: 't-5',
-        entrance: 3,
-        location: 'house',
-        zone: 'roof',
-        title: {
-          ru: 'Очистить водосточную воронку на кровле',
-          kg: 'Чатырдагы суу агуучу воронканы тазалоо'
-        },
-        desc: {
-          ru: 'Проверить свободный сток воды перед осадками',
-          kg: 'Жаан-чачындын алдында суунун эркин агышын текшерүү'
-        },
-        photo: createSamplePhoto('#e0f2fe', '#0284c7', 'Roof / Чатыр'),
-        workerDone: false,
-        domkomDone: false,
-        createdAt: '12:20'
-      }
-    ];
 
     let state = {
       lang: localStorage.getItem(STORAGE_KEY_LANG) || 'ru',
       entrance: 1,
-      selectedLocation: null, // null = floors list, 'house' = house section, 1..16 = floor number
-      statusFilter: 'all', // 'all' | 'open' | 'check' | 'done'
-      zoneFilter: 'all', // 'all' | 'yard' | 'roof' | 'parking' | 'common'
+      selectedLocation: null,
+      statusFilter: 'all',
+      zoneFilter: 'all',
       sortAsc: true,
-      role: null, // null | { role: 'domkom', entrance: 1..3 } | { role: 'moderator', entrance: null }
+      role: null,
       tasks: [],
-      draftPhoto: null
+      draftPhoto: null,
+      online: true
     };
 
-    function loadState() {
+    function loadRoleAndCache() {
       try {
         const savedRole = localStorage.getItem(STORAGE_KEY_ROLE);
         if (savedRole) state.role = JSON.parse(savedRole);
@@ -1224,24 +1112,106 @@
       }
 
       try {
-        const raw = localStorage.getItem(STORAGE_KEY_TASKS);
-        if (raw) {
-          const parsed = JSON.parse(raw);
-          if (Array.isArray(parsed)) {
-            state.tasks = parsed;
-            return;
-          }
+        const cached = localStorage.getItem(STORAGE_KEY_TASKS_CACHE);
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed)) state.tasks = parsed;
         }
       } catch (e) {}
-
-      state.tasks = DEFAULT_TASKS;
-      saveTasks();
     }
 
-    function saveTasks() {
+    function saveCache() {
       try {
-        localStorage.setItem(STORAGE_KEY_TASKS, JSON.stringify(state.tasks));
+        localStorage.setItem(STORAGE_KEY_TASKS_CACHE, JSON.stringify(state.tasks));
       } catch (e) {}
+    }
+
+    async function fbRequest(path, method = 'GET', body = null) {
+      const url = `${DB_URL}${path}.json`;
+      const opts = { method, headers: {} };
+      if (body !== null) {
+        opts.headers['Content-Type'] = 'application/json';
+        opts.body = JSON.stringify(body);
+      }
+      const res = await fetch(url, opts);
+      if (!res.ok) throw new Error('Firebase HTTP ' + res.status);
+      return await res.json();
+    }
+
+    async function migrateLocalTasksIfNeeded() {
+      if (localStorage.getItem(STORAGE_KEY_MIGRATED) === '1') return;
+      try {
+        const rawLocal = localStorage.getItem('aalam16_tasks_v1');
+        if (!rawLocal) {
+          localStorage.setItem(STORAGE_KEY_MIGRATED, '1');
+          return;
+        }
+        const localArr = JSON.parse(rawLocal);
+        if (!Array.isArray(localArr)) {
+          localStorage.setItem(STORAGE_KEY_MIGRATED, '1');
+          return;
+        }
+
+        const userTasks = localArr.filter(item => item && item.id && !DEMO_IDS.has(item.id));
+        if (userTasks.length > 0) {
+          const existingCloud = await fbRequest('/tasks');
+          const cloudMap = existingCloud && typeof existingCloud === 'object' ? existingCloud : {};
+          let moved = 0;
+          for (const task of userTasks) {
+            if (!cloudMap[task.id]) {
+              await fbRequest(`/tasks/${task.id}`, 'PUT', task);
+              moved++;
+            }
+          }
+          if (moved > 0) {
+            showToast(t().migratedToast(moved));
+          }
+        }
+        localStorage.setItem(STORAGE_KEY_MIGRATED, '1');
+      } catch (e) {
+        // Если сети нет, попробуем при следующем запуске
+      }
+    }
+
+    async function fetchTasksFromCloud() {
+      try {
+        const data = await fbRequest('/tasks');
+        state.online = true;
+        if (!data || typeof data !== 'object') {
+          state.tasks = [];
+        } else {
+          const list = Object.values(data).filter(Boolean);
+          list.sort((a, b) => String(b.id || '').localeCompare(String(a.id || '')));
+          state.tasks = list;
+        }
+        saveCache();
+        renderAll();
+      } catch (e) {
+        state.online = false;
+        renderHeader();
+      }
+    }
+
+    function startRealtimeStream() {
+      try {
+        const es = new EventSource(`${DB_URL}/tasks.json`);
+        es.addEventListener('put', () => {
+          fetchTasksFromCloud();
+        });
+        es.addEventListener('patch', () => {
+          fetchTasksFromCloud();
+        });
+        es.onerror = () => {
+          state.online = false;
+          renderHeader();
+        };
+        es.onopen = () => {
+          state.online = true;
+          renderHeader();
+        };
+      } catch (e) {}
+
+      setInterval(fetchTasksFromCloud, 8000);
     }
 
     function t() {
@@ -1300,7 +1270,7 @@
     }
 
     function getEntranceStats(entranceNum) {
-      const list = state.tasks.filter(item => item.entrance === entranceNum);
+      const list = state.tasks.filter(item => Number(item.entrance) === Number(entranceNum));
       let open = 0, check = 0, done = 0;
       list.forEach(item => {
         const st = getTaskStatus(item);
@@ -1313,7 +1283,7 @@
 
     function getLocationStats(entranceNum, location) {
       const list = state.tasks.filter(
-        item => item.entrance === entranceNum && String(item.location) === String(location)
+        item => Number(item.entrance) === Number(entranceNum) && String(item.location) === String(location)
       );
       let open = 0, check = 0, done = 0;
       list.forEach(item => {
@@ -1329,7 +1299,11 @@
       const tr = t();
       document.title = tr.brand;
       document.getElementById('brandTitle').textContent = tr.brand;
-      document.getElementById('syncText').textContent = tr.online;
+
+      const syncBadge = document.getElementById('syncBadge');
+      syncBadge.classList.toggle('offline', !state.online);
+      document.getElementById('syncText').textContent = state.online ? tr.online : tr.offline;
+
       document.getElementById('entranceLabel').textContent = tr.entranceLabel;
       document.getElementById('currentEntranceName').textContent = tr.entranceName(state.entrance);
       document.getElementById('fabText').textContent = tr.addTask;
@@ -1361,7 +1335,6 @@
       if (stats.open > 0) parts.push(`<span class="badge badge-open">${tr.openCount(stats.open)}</span>`);
       if (stats.check > 0) parts.push(`<span class="badge badge-check">${tr.checkCount(stats.check)}</span>`);
       if (stats.done > 0) parts.push(`<span class="badge badge-done">${tr.doneCount(stats.done)}</span>`);
-      if (parts.length === 0) parts.push(`<span class="badge badge-empty">${tr.noTasks}</span>`);
       return parts.join('');
     }
 
@@ -1478,7 +1451,7 @@
       `;
 
       const filteredTasks = state.tasks.filter(item => {
-        if (item.entrance !== state.entrance) return false;
+        if (Number(item.entrance) !== Number(state.entrance)) return false;
         if (String(item.location) !== String(state.selectedLocation)) return false;
         if (isHouse && state.zoneFilter !== 'all' && item.zone !== state.zoneFilter) return false;
         const st = getTaskStatus(item);
@@ -1577,7 +1550,7 @@
       const container = document.getElementById('entranceOptions');
       container.innerHTML = [1, 2, 3].map(num => {
         const st = getEntranceStats(num);
-        const active = state.entrance === num;
+        const active = Number(state.entrance) === Number(num);
         return `
           <button type="button" class="option-card ${active ? 'active' : ''}" onclick="chooseEntrance(${num})">
             <div>
@@ -1653,7 +1626,7 @@
       renderAll();
     }
 
-    function toggleWorkerCheck(taskId) {
+    async function toggleWorkerCheck(taskId) {
       const task = state.tasks.find(item => item.id === taskId);
       if (!task) return;
       if (task.workerDone) {
@@ -1662,11 +1635,17 @@
       } else {
         task.workerDone = true;
       }
-      saveTasks();
+      saveCache();
       renderAll();
+      try {
+        await fbRequest(`/tasks/${task.id}`, 'PATCH', {
+          workerDone: task.workerDone,
+          domkomDone: task.domkomDone
+        });
+      } catch (e) {}
     }
 
-    function toggleDomkomCheck(taskId) {
+    async function toggleDomkomCheck(taskId) {
       const tr = t();
       const task = state.tasks.find(item => item.id === taskId);
       if (!task) return;
@@ -1689,11 +1668,17 @@
         task.domkomDone = false;
       }
 
-      saveTasks();
+      saveCache();
       renderAll();
+      try {
+        await fbRequest(`/tasks/${task.id}`, 'PATCH', {
+          workerDone: task.workerDone,
+          domkomDone: task.domkomDone
+        });
+      } catch (e) {}
     }
 
-    function deleteTask(taskId) {
+    async function deleteTask(taskId) {
       const tr = t();
       const task = state.tasks.find(item => item.id === taskId);
       if (!task) return;
@@ -1702,10 +1687,15 @@
         return;
       }
       if (!confirm(tr.confirmDelete)) return;
+
       state.tasks = state.tasks.filter(item => item.id !== taskId);
-      saveTasks();
+      saveCache();
       renderAll();
       showToast(tr.deletedToast);
+
+      try {
+        await fbRequest(`/tasks/${taskId}`, 'DELETE');
+      } catch (e) {}
     }
 
     function openCreateModal() {
@@ -1733,7 +1723,7 @@
 
       const entSelect = document.getElementById('taskEntrance');
       entSelect.innerHTML = [1, 2, 3].map(n =>
-        `<option value="${n}" ${n === state.entrance ? 'selected' : ''}>${tr.entranceName(n)}</option>`
+        `<option value="${n}" ${Number(n) === Number(state.entrance) ? 'selected' : ''}>${tr.entranceName(n)}</option>`
       ).join('');
 
       const locSelect = document.getElementById('taskLocation');
@@ -1774,14 +1764,14 @@
       reader.onload = function(e) {
         const img = new Image();
         img.onload = function() {
-          const maxW = 900;
+          const maxW = 800;
           const scale = img.width > maxW ? maxW / img.width : 1;
           const canvas = document.createElement('canvas');
           canvas.width = Math.round(img.width * scale);
           canvas.height = Math.round(img.height * scale);
           const ctx = canvas.getContext('2d');
           ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-          const compressed = canvas.toDataURL('image/jpeg', 0.72);
+          const compressed = canvas.toDataURL('image/jpeg', 0.68);
           state.draftPhoto = compressed;
 
           const preview = document.getElementById('photoPreview');
@@ -1793,7 +1783,7 @@
       reader.readAsDataURL(file);
     }
 
-    function createTask() {
+    async function createTask() {
       const tr = t();
       const titleVal = document.getElementById('taskTitle').value.trim();
       if (!titleVal) {
@@ -1824,7 +1814,7 @@
       };
 
       state.tasks.unshift(newTask);
-      saveTasks();
+      saveCache();
       state.entrance = entranceNum;
       state.selectedLocation = locationVal;
       state.statusFilter = 'all';
@@ -1833,10 +1823,28 @@
       closeModal('createModal');
       renderAll();
       showToast(tr.taskCreated);
+
+      try {
+        await fbRequest(`/tasks/${newTask.id}`, 'PUT', newTask);
+        state.online = true;
+        renderHeader();
+      } catch (e) {
+        state.online = false;
+        renderHeader();
+      }
     }
 
-    loadState();
-    setLang(state.lang);
+    loadRoleAndCache();
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.lang === state.lang);
+    });
+    renderAll();
+
+    (async () => {
+      await migrateLocalTasksIfNeeded();
+      await fetchTasksFromCloud();
+      startRealtimeStream();
+    })();
   </script>
 </body>
 </html>

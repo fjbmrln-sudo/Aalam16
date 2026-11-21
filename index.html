@@ -1477,7 +1477,7 @@
               <div class="task-top">
                 <div class="task-meta">
                   ${zoneBadge}
-                  <span>${tr.createdAtLabel}: ${task.createdAt || ''}</span>
+                  <span>${tr.createdAtLabel}: ${formatTaskDateTime(task)}</span>
                 </div>
                 ${canManage ? `
                   <button type="button" class="del-btn" onclick="deleteTask('${task.id}')">${tr.deleteBtn}</button>
@@ -1512,6 +1512,22 @@
         ${filterBarHtml}
         <div class="floor-list">${cardsHtml}</div>
       `;
+    }
+
+    function formatTaskDateTime(task) {
+      if (task.createdAt && task.createdAt.includes('.')) {
+        return task.createdAt;
+      }
+      const match = String(task.id || '').match(/^t-(\d{13})/);
+      if (match) {
+        const d = new Date(Number(match[1]));
+        const day = String(d.getDate()).padStart(2, '0');
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const hours = String(d.getHours()).padStart(2, '0');
+        const mins = String(d.getMinutes()).padStart(2, '0');
+        return `${day}.${month} ${hours}:${mins}`;
+      }
+      return task.createdAt || '';
     }
 
     function escapeHtml(str) {
@@ -1798,7 +1814,7 @@
       const descVal = document.getElementById('taskDesc').value.trim();
 
       const now = new Date();
-      const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      const timeStr = `${String(now.getDate()).padStart(2, '0')}.${String(now.getMonth() + 1).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
       const newTask = {
         id: 't-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
